@@ -18,6 +18,18 @@ class DBPermissionRepository implements PermissionRepositoryInterface {
 	}
 
 	/**
+	 * Implement lists($limit=10)
+	 */
+	public function lists($limit=10) {
+		if($limit == 0) {
+			return Permission::get();
+		} elseif($limit == 1) {
+			return Permission::first();
+		}
+		return Permission::orderBy('display_name', 'asc')->limit($limit)->get();
+	}
+
+	/**
 	 * Implement find($id)
 	 */
 	public function find($id) {

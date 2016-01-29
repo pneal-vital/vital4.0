@@ -46,7 +46,8 @@ return [
             'openTotes'        => 'Article :Article has open tote :ToteID in :Location_Name',
         ],
 
-        'deleteHasChildren'    => 'Cannot delete an :Model that has :Children.',
+        'deleteHasChildren'    => 'Cannot delete an :Model that has child :Children.',
+        'deleteHasParent'      => 'Cannot delete an :Model connected to parent :Parent.',
 
         'location' => [
             'alreadyInUse'     => ':Work_Table is already in use by :User_Name, Select a different Work Table',

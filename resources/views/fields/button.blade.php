@@ -8,8 +8,8 @@
 </div>
 <!-- End of fields/button.blade.php -->
 
-<!-- TODO replace generated _input above with this button for search, filter, ..
+{{-- TODO replace generated _input above with this button for search, filter, ..
 _button type="button" class="btn btn-info">
     _span class="glyphicon glyphicon-search">_/span> Search
 _/button>
- -->
+ --}}

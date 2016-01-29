@@ -299,9 +299,9 @@ class ArticleFlow {
     public function textEntry($newText) {
         // What have we in the current session?
         $previous = (object) unserialize(Session::get(self::PREVIOUS, self::UNKNOWN_SERIAL));
-        Log::debug(__METHOD__."(".__LINE__."):  previous:");
-        Log::debug(serialize($previous));
-        Log::debug($newText);
+
+        Log::debug('pervious: '.serialize($previous));
+        //Log::debug('newText:', $newText);
 
         // interpret the netText
         $entry = $this->interpretNewText($newText, $previous);
@@ -352,8 +352,10 @@ class ArticleFlow {
             // save Session data for next round
             if($saveAsPrevious && stripos(self::UPC.', '.self::TOTE.', '.self::PALLET, $entry->type) !== false) {
                 Session::put(self::PREVIOUS, serialize($entry));
-                Log::debug(__METHOD__."(".__LINE__."):  entry:");
-                Log::debug(serialize($entry));
+                //Log::debug(__METHOD__."(".__LINE__."):  entry:");
+                Log::debug('set pervious: '.serialize($entry));
+            } elseif($saveAsPrevious == false && $entry->type == self::UNKNOWN) {
+                Log::debug("entry: don't save previous when type is unknown");
             } else {
                 Log::debug(__METHOD__."(".__LINE__."):  entry: ".($saveAsPrevious ? 'saveAsPrevious, ' : 'forget previous, ').(isset($entry->type) ? $entry->type : 'entry->type is not set'));
                 Session::forget(self::PREVIOUS);
@@ -373,8 +375,8 @@ class ArticleFlow {
      * @return mixed
      */
     protected function interpretNewText(&$newText, $previous) {
-        Log::debug(__METHOD__."(".__LINE__."):  newText");
-        Log::debug($newText);
+        //Log::debug(__METHOD__."(".__LINE__."):  newText");
+        Log::debug('newText:', $newText);
         // user didn't scan anything, probably just hit a button
         if(!isset($newText[self::TEXT])) {
             $entry = (object) unserialize(self::NO_TEXT_SERIAL);
@@ -394,23 +396,23 @@ class ArticleFlow {
             }
         }
         if(!isset($entry)) {
-            $upc = $this->upcRepository->filterOn($filter, 1);
-            if(isset($upc)) {
-                $entry = (object) [self::TYPE => self::UPC, self::OBJECT_ID => $upc->objectID, self::TEXT => $newText[self::TEXT]];
+            $upcs = $this->upcRepository->filterOn($filter, 2);
+            if(isset($upcs) && count($upcs) == 1) {
+                $entry = (object) [self::TYPE => self::UPC, self::OBJECT_ID => $upcs[0]->objectID, self::TEXT => $newText[self::TEXT]];
             }
         }
         if(!isset($entry)) {
             Session::forget('toteID');
-            $tote = $this->toteRepository->filterOn($filter, 1);
-            if(isset($tote)) {
-                Session::set('toteID', $tote->objectID);
-                $entry = (object) [self::TYPE => self::TOTE, self::OBJECT_ID => $tote->objectID, self::TEXT => $newText[self::TEXT]];
+            $totes = $this->toteRepository->filterOn($filter, 2);
+            if(isset($totes) && count($totes) == 1) {
+                Session::set('toteID', $totes[0]->objectID);
+                $entry = (object) [self::TYPE => self::TOTE, self::OBJECT_ID => $totes[0]->objectID, self::TEXT => $newText[self::TEXT]];
             }
         }
         if(!isset($entry)) {
-            $pallet = $this->palletRepository->filterOn($filter, 1);
-            if(isset($pallet)) {
-                $entry = (object) [self::TYPE => self::PALLET, self::OBJECT_ID => $pallet->objectID, self::TEXT => $newText[self::TEXT]];
+            $pallets = $this->palletRepository->filterOn($filter, 2);
+            if(isset($pallets) && count($pallets) == 1) {
+                $entry = (object) [self::TYPE => self::PALLET, self::OBJECT_ID => $pallets[0]->objectID, self::TEXT => $newText[self::TEXT]];
             }
         }
         if(!isset($entry)) {
@@ -418,8 +420,8 @@ class ArticleFlow {
             $entry = (object) [self::TYPE => self::UNKNOWN, self::OBJECT_ID => 0, self::TEXT => $newText[self::TEXT]];
         }
 
-        Log::debug(__METHOD__."(".__LINE__."):  entry");
-        Log::debug(serialize($entry));
+        Log::debug('entry: '.serialize($entry));
+        //Log::debug(serialize($entry));
         return $entry;
     }
 

@@ -18,6 +18,18 @@ class DBRoleRepository implements RoleRepositoryInterface {
 	}
 
 	/**
+	 * Implement lists($limit=10)
+	 */
+	public function lists($limit=10) {
+		if($limit == 0) {
+			return Role::get();
+		} elseif($limit == 1) {
+			return Role::first();
+		}
+		return Role::orderBy('display_name', 'asc')->limit($limit)->get();
+	}
+
+	/**
 	 * Implement find($id)
 	 */
 	public function find($id) {

@@ -93,17 +93,18 @@
                     </li>
                 @endif
                 {{-- TODO: Add a new Reports menu item which should gather relavant data, and submit background task requests --}}
+            </ul>
+            <ul class="nav nav-pills navbar-nav navbar-right">
                 @if(Entrust::hasRole(['admin','support']))
                     <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">@lang('labels.navbar.Admin') <span class="caret"></span></a>
                         <ul class="dropdown-menu">
                             <li>{!! link_to_route('permission.index', Lang::get('labels.navbar.Permissions')) !!}</li>
                             <li>{!! link_to_route('role.index', Lang::get('labels.navbar.Roles')) !!}</li>
+                            <li>{!! link_to_route('rolePermissions.index', Lang::get('labels.navbar.RolePermissions')) !!}</li>
                             <li>{!! link_to_route('user.index', Lang::get('labels.navbar.Users')) !!}</li>
                         </ul>
                     </li>
                 @endif
-            </ul>
-            <ul class="nav nav-pills navbar-nav navbar-right">
                 <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="glyphicon glyphicon-user"></span>&nbsp; {{ \Auth::user()->name }}</a>
                     <ul class="dropdown-menu">
                         <li>{!! link_to_route('userActivity.index', Lang::get('labels.navbar.MyActivities')) !!}</li>

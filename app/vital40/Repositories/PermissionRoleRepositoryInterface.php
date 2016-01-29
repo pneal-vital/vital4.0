@@ -1,11 +1,9 @@
 <?php namespace vital40\Repositories;
 
 
-interface RoleRepositoryInterface {
+interface PermissionRoleRepositoryInterface {
 
 	public function getAll($limit=10);
-
-	public function lists($limit=10);
 
 	public function find($id);
 

@@ -338,7 +338,8 @@ class QuickReceiveController extends Controller
             }
 
             // When multiple PODs for this UPC
-            if(   (isset($quickReceive->UPC) && strlen($quickReceive->UPC) > 0)
+            if(   (isset($quickReceive->Purchase_Order))
+              and (isset($quickReceive->UPC) && strlen($quickReceive->UPC) > 0)
               and (isset($quickReceive->Article) == False || strlen($quickReceive->Article) == 0)) {
                 // emulate the btn_Article was pressed and we set filter to list the multiple PODs for this UPC
                 $receiveArticle['btn_Article'] = 'repeat button Article';
@@ -763,14 +764,14 @@ class QuickReceiveController extends Controller
         $articleID = Session::get('articleID');
         $text_entry = Input::get( 'text_entry' );
         $clicked = Input::get('clicked');
-        Log::debug(__METHOD__."(".__LINE__."):  podID: $podID, articleID: $articleID");
-        Log::debug($text_entry);
-        Log::debug($clicked);
+        Log::debug("podID: $podID, articleID: $articleID");
+        //Log::debug("text_entry: $text_entry, clicked: $clicked");
+        //Log::debug('clicked: '.$clicked);
 
         if(isset($podID) == False or isset($articleID) == False) {
             $responseText = [
-                'POD'         => 0,
-                'Article'     => 0,
+                'POD'         => (isset($podID) ? $podID : 0),
+                'Article'     => (isset($articleID) ? $articleID : 0),
                 'User_Name'   => Auth::user()->name,
                 'Sender_Name' => Config::get('constants.application.name'),
                 'Text'        => Lang::get('internal.errors.article.noArticle'),
@@ -786,22 +787,23 @@ class QuickReceiveController extends Controller
                 'Text' => $text_entry,
                 'clicked' => $clicked,
             ];
+            Log::debug('newText:', $newText);
             $this->userConversationRepository->create($newText);
 
             // calling into business logic
             $responseText = ReceiveArticle::textEntry($newText);
-            Log::debug(__METHOD__.'('.__LINE__.'):  responseText', $responseText);
+            Log::debug('responseText:', $responseText);
         }
 
         $this->userConversationRepository->create($responseText);
 
         // current UserConversation
         $userConversations = $this->getUserConversations();
-        Log::debug(__METHOD__.'('.__LINE__.'):  userConversations');
+        //Log::debug(__METHOD__.'('.__LINE__.'):  userConversations');
         //Log::debug($userConversations);
 
         $jsonResponse = Response::json( compact('userConversations', 'responseText') );
-        Log::debug(__METHOD__.'('.__LINE__.'):  jsonResponse');
+        //Log::debug(__METHOD__.'('.__LINE__.'):  jsonResponse');
         Log::debug($jsonResponse);
 
         return $jsonResponse;

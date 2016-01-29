@@ -1,10 +1,7 @@
 <?php namespace vital40\Repositories;
 
-
-use App\vital3\VitalObject;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 use vital40\UserConversation;
+use \Log;
 
 class DBUserConversationRepository implements UserConversationRepositoryInterface {
 
@@ -79,6 +76,7 @@ class DBUserConversationRepository implements UserConversationRepositoryInterfac
 	 * Implement create($input)
 	 */
 	public function create($input) {
+        Log::debug('input:',$input);
 		return UserConversation::create($input);
 	}
 

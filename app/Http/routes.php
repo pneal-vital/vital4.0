@@ -143,6 +143,12 @@ Entrust::routeNeedsRole('role*', ['teamLead','super','manager','support'], Redir
 Entrust::routeNeedsRole('role/create', 'manager', Redirect::to('home'));
 Entrust::routeNeedsRole('role/*/edit', 'manager', Redirect::to('home'));
 
+Route::resource('rolePermissions', 'RolePermissionsController');
+Route::patch('rolePermissions', ['as' => 'rolePermissions.filter', 'uses' => 'RolePermissionsController@filter']);
+Entrust::routeNeedsRole('rolePermissions*', ['teamLead','super','manager','support'], Redirect::to('home'), false);
+Entrust::routeNeedsRole('rolePermissions/create', 'manager', Redirect::to('home'));
+Entrust::routeNeedsRole('rolePermissions/*/edit', 'manager', Redirect::to('home'));
+
 Route::resource('tote', 'ToteController');
 Route::patch('tote', ['as' => 'tote.filter', 'uses' => 'ToteController@filter']);
 Entrust::routeNeedsRole('tote*', ['teamLead','super','manager','support'], Redirect::to('home'), false);

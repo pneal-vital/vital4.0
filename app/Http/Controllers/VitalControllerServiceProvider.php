@@ -25,8 +25,16 @@ class VitalControllerServiceProvider extends ServiceProvider {
 			'App\Http\Controllers\PalletController'
 		);
 		$this->app->bind(
+			'App\Http\Controllers\PermissionControllerInterface',
+			'App\Http\Controllers\PermissionController'
+		);
+		$this->app->bind(
 			'App\Http\Controllers\Receive\ReceivePOControllerInterface',
 			'App\Http\Controllers\Receive\ReceivePOController'
+		);
+		$this->app->bind(
+			'App\Http\Controllers\RoleControllerInterface',
+			'App\Http\Controllers\RoleController'
 		);
 		$this->app->bind(
 			'App\Http\Controllers\ToteControllerInterface',

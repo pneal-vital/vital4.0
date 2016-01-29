@@ -5,6 +5,8 @@ interface PermissionRepositoryInterface {
 
 	public function getAll($limit=10);
 
+	public function lists($limit=10);
+
 	public function find($id);
 
 	public function filterOn($input, $limit=10);

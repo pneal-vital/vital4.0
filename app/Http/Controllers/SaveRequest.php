@@ -19,7 +19,7 @@ trait SaveRequest {
         if(count($request) == 2 and isset($request['_method']) and isset($request['_token'])) {
             $request = [];
         }
-        Log::debug(__METHOD__."(".__LINE__."):  ",$request);
+        //Log::debug('  initial request:',$request);
         // get the previous request
         $previousRequest = [];
         if(Session::has('previousRequest')) {
@@ -29,7 +29,7 @@ trait SaveRequest {
         if(isset($previousRequest[$classID])) {
             $thisClassRequest = $previousRequest[$classID];
             $this->filterPreviousRequest($thisClassRequest);
-            Log::debug(__METHOD__."(".__LINE__."):  ",$thisClassRequest);
+            //Log::debug($classID.' request:',$thisClassRequest);
             $request = array_merge($thisClassRequest, $request);
         }
         // allow for a default Filter if we don't have one
@@ -42,7 +42,7 @@ trait SaveRequest {
         $previousRequest[$classID] = $request;
         Session::put('previousRequest', $previousRequest);
         //Session::forget('PreviousRequest');
-        Log::debug(__METHOD__."(".__LINE__."):  ",$request);
+        //Log::debug(' combined request:',$request);
         //dd(__METHOD__."(".__LINE__.")",compact('previousRequest','request'));
         // return our composite request
         return $request;

@@ -52,6 +52,10 @@ class VITaL40ServiceProvider extends ServiceProvider {
             'vital40\Repositories\DBPermissionRepository'
         );
         $this->app->bind(
+            'vital40\Repositories\PermissionRoleRepositoryInterface',
+            'vital40\Repositories\DBPermissionRoleRepository'
+        );
+        $this->app->bind(
             'vital40\Repositories\PurchaseOrderRepositoryInterface',
             'vital40\Repositories\DBPurchaseOrderRepository'
         );

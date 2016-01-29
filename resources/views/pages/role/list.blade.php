@@ -24,6 +24,7 @@
         <th>{!! Lang::get('labels.description')  !!}</th>
         <th>{!! Lang::get('labels.created_at')   !!}</th>
         <th>{!! Lang::get('labels.updated_at')   !!}</th>
+        @include('fields.cedIcons', ['model' => 'role', 'elemType' => 'th'])
     </tr>
 
     @foreach($roles as $r)
@@ -36,11 +37,14 @@
             <td>{{ $r->description  }}</td>
             <td>{{ $r->created_at   }}</td>
             <td>{{ $r->updated_at   }}</td>
+            @include('fields.cedIcons', ['model' => 'role', 'elemType' => 'td', 'id' => $r->id])
         </tr>
     @endforeach
 </table>
 
 {!! isset($role) ? $roles->appends($role)->render() : $roles->render() !!}
+
+@include('fields.cedIcons', ['model' => 'role', 'elemType' => 'script'])
 
 <!-- End of pages/role/list.blade.php -->
 

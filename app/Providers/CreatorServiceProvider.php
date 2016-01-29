@@ -55,6 +55,21 @@ class CreatorServiceProvider extends ServiceProvider {
             'pages.upc.show',
         ], 'App\Http\ViewCreators\ClientCreator');
 
+        /* Permissions */
+        View::creator([
+            'pages.rolePermissions.index',
+            'pages.rolePermissions.show',
+        ], 'App\Http\ViewCreators\PermissionCreator');
+
+        /* Roles */
+        View::creator([
+            'pages.rolePermissions.create',
+            'pages.rolePermissions.edit',
+            'pages.rolePermissions.index',
+            'pages.rolePermissions.show',
+            'pages.rolePermissions.update',
+        ], 'App\Http\ViewCreators\RoleCreator');
+
         /* UOMs */
         View::creator([
             'pages.article.create',
