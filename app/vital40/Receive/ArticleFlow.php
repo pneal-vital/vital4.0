@@ -17,6 +17,7 @@ use vital40\Repositories\PerformanceTallyRepositoryInterface;
 use vital40\Repositories\PurchaseOrderDetailRepositoryInterface;
 use vital40\Repositories\PurchaseOrderRepositoryInterface;
 use vital40\Repositories\ReceiptHistoryRepositoryInterface;
+use vital40\Repositories\SessionTypeRepositoryInterface;
 use vital40\Repositories\ToteRepositoryInterface;
 use vital40\Repositories\UPCRepositoryInterface;
 use vital40\Repositories\UserActivityRepositoryInterface;
@@ -25,6 +26,7 @@ use \Auth;
 use \Config;
 use \Lang;
 use \Log;
+use \Request;
 use \Session;
 
 
@@ -57,6 +59,7 @@ class ArticleFlow {
     protected $purchaseOrderDetailRepository;
     protected $purchaseOrderRepository;
     protected $receiptHistoryRepository;
+    protected $sessionTypeRepository;
     protected $toteRepository;
     protected $uomRepository;
     protected $upcRepository;
@@ -75,6 +78,7 @@ class ArticleFlow {
         , PurchaseOrderDetailRepositoryInterface $purchaseOrderDetailRepository
         , PurchaseOrderRepositoryInterface $purchaseOrderRepository
         , ReceiptHistoryRepositoryInterface $receiptHistoryRepository
+        , SessionTypeRepositoryInterface $sessionTypeRepository
         , ToteRepositoryInterface $toteRepository
         , UOMRepositoryInterface $uomRepository
         , UPCRepositoryInterface $upcRepository
@@ -88,10 +92,11 @@ class ArticleFlow {
         $this->purchaseOrderDetailRepository = $purchaseOrderDetailRepository;
         $this->purchaseOrderRepository = $purchaseOrderRepository;
         $this->receiptHistoryRepository = $receiptHistoryRepository;
-        $this->userActivityRepository = $userActivityRepository;
+        $this->sessionTypeRepository = $sessionTypeRepository;
+        $this->toteRepository = $toteRepository;
         $this->uomRepository = $uomRepository;
         $this->upcRepository = $upcRepository;
-        $this->toteRepository = $toteRepository;
+        $this->userActivityRepository = $userActivityRepository;
     }
 
     /**
@@ -100,7 +105,7 @@ class ArticleFlow {
      * @param $purchaseOrder
      */
     public function selectPO($purchaseOrder) {
-        //dd($purchaseOrder);
+        //dd(__METHOD__.'('.__LINE__.')', compact('purchaseOrder'));
 
         $this->userActivityRepository->associate($purchaseOrder->Purchase_Order
                 , Config::get('constants.userActivity.classID.ReceivePO')
@@ -114,7 +119,7 @@ class ArticleFlow {
      * @param $location
      */
     public function selectLocation($location) {
-        //dd($purchaseOrder);
+        //dd(__METHOD__.'('.__LINE__.')', compact('purchaseOrder'));
 
         $this->userActivityRepository->associate($location->objectID
                 , Config::get('constants.userActivity.classID.ReceiveLocation')
@@ -129,7 +134,7 @@ class ArticleFlow {
      * @param $article
      */
     public function selectArticle($purchaseOrderDetail, $article) {
-        //dd($article);
+        //dd(__METHOD__.'('.__LINE__.')', compact('article'));
         // try var_dump($article);
 
         $this->userActivityRepository->associate($purchaseOrderDetail->objectID
@@ -155,7 +160,7 @@ class ArticleFlow {
      * @return bool True if rework value is not set.
      */
     public function requestReworkValue($articleID) {
-        Log::debug(__METHOD__."(".__LINE__."):  articleID: $articleID");
+        Log::debug("articleID: $articleID");
 
         $article = $this->articleRepository->find($articleID);
 
@@ -171,7 +176,7 @@ class ArticleFlow {
      * @return bool True if rework value is not set.
      */
     public function setReworkValue($articleID, $value) {
-        Log::debug(__METHOD__."(".__LINE__."):  articleID: $articleID, value: $value");
+        Log::debug("articleID: $articleID, value: $value");
 
         $article = $this->articleRepository->find($articleID);
 
@@ -190,7 +195,7 @@ class ArticleFlow {
      * @return bool True if rework value is not set.
      */
     public function isArticleComplete($purchaseOrderDetail, $article) {
-        Log::debug(__METHOD__."(".__LINE__."):  podID: {$purchaseOrderDetail->objectID}, articleID: {$article->UPC}");
+        Log::debug("podID: {$purchaseOrderDetail->objectID}, articleID: {$article->UPC}");
 
         //$article = $this->articleRepository->find($articleID);
 
@@ -220,7 +225,7 @@ class ArticleFlow {
         // UPCs
         $upcs = $this->upcRepository->getArticleUPCs($articleID);
 
-        //dd($upcs);
+        //dd(__METHOD__.'('.__LINE__.')', compact('upcs'));
         if(isset($upcs) && count($upcs)) {
 
             // foreach upc record
@@ -253,7 +258,7 @@ class ArticleFlow {
             ksort($results);
         }
 
-        //dd($results);
+        //dd(__METHOD__.'('.__LINE__.')', compact('results'));
         return $results;
     }
 
@@ -297,11 +302,29 @@ class ArticleFlow {
     ];
      */
     public function textEntry($newText) {
-        // What have we in the current session?
-        $previous = (object) unserialize(Session::get(self::PREVIOUS, self::UNKNOWN_SERIAL));
+        $sid = Request::session()->getId();
+        Log::debug('Start of textEntry($newText): User: '.Auth::user()->name.', sid: '.$sid);
 
+        /*
+         *  What have we in the current session?
+         *
+         * Session::get(<name>,<default value>);
+         * =====================================
+         * It would appear this is not as simple as expected.
+         * Tried using Session::put('previous',serialize($entry))
+         * and then here retrieve it with unserialize(Session::get('previous', self::UNKNOWN_SERIAL));
+         * But this proved to be unreliable. It appears that other intermingled transactions are using
+         * Session, and the value for 'previous' is often lost.
+         *
+         * sessionTypeRepository
+         * =====================
+         * sessionTypeRepository was created to replace the 'previous' held by Session. I have full control
+         * over which transactions make use sessionTypeRepository. textEntry is the only method that uses
+         * sessionTypeRepository with id => 'previous' thus isolating the issue.
+         */
+        //$previous = (object) unserialize(Session::get(self::PREVIOUS, self::UNKNOWN_SERIAL));
+        $previous = (object) unserialize($this->sessionTypeRepository->get(self::PREVIOUS, self::UNKNOWN_SERIAL));
         Log::debug('pervious: '.serialize($previous));
-        //Log::debug('newText:', $newText);
 
         // interpret the netText
         $entry = $this->interpretNewText($newText, $previous);
@@ -315,7 +338,7 @@ class ArticleFlow {
          * 2. if they previously scanned a Tote, and now scanned a Pallet
          *   they want to close the Tote and place it on the Pallet
          * 3. if they scanned a UPC, display the details
-         *   ask if they want to put it in the same tote
+         *   ask to put it in the same tote
          * 4. ???
          */
         $saveAsPrevious = false;
@@ -347,24 +370,25 @@ class ArticleFlow {
         $responseKey[self::TEXT] = $newText[self::TEXT];
         $responseKey[self::PREVIOUS_TEXT] = isset($previous->Text) ? $previous->Text : '';
 
-        Log::debug(__METHOD__."(".__LINE__."):  check for responseKey[errors]");
+        Log::debug('check for responseKey[errors]');
         if(!isset($responseKey['error'])) {
             // save Session data for next round
             if($saveAsPrevious && stripos(self::UPC.', '.self::TOTE.', '.self::PALLET, $entry->type) !== false) {
-                Session::put(self::PREVIOUS, serialize($entry));
-                //Log::debug(__METHOD__."(".__LINE__."):  entry:");
+                //Session::put(self::PREVIOUS, serialize($entry));
+                $this->sessionTypeRepository->put(self::PREVIOUS, serialize($entry));
                 Log::debug('set pervious: '.serialize($entry));
             } elseif($saveAsPrevious == false && $entry->type == self::UNKNOWN) {
                 Log::debug("entry: don't save previous when type is unknown");
             } else {
-                Log::debug(__METHOD__."(".__LINE__."):  entry: ".($saveAsPrevious ? 'saveAsPrevious, ' : 'forget previous, ').(isset($entry->type) ? $entry->type : 'entry->type is not set'));
-                Session::forget(self::PREVIOUS);
+                Log::debug('entry: '.($saveAsPrevious ? 'saveAsPrevious, ' : 'forget previous, ').(isset($entry->type) ? $entry->type : 'entry->type is not set'));
+                //Session::forget(self::PREVIOUS);
+                $this->sessionTypeRepository->delete(self::PREVIOUS);
             }
         }
 
         // build our response
         $response = $this->buildResponse($newText, $entry, $responseKey);
-        Log::debug(__METHOD__."(".__LINE__."):  response", $response);
+        Log::debug('response', $response);
 
         return $response;
     }
@@ -375,7 +399,6 @@ class ArticleFlow {
      * @return mixed
      */
     protected function interpretNewText(&$newText, $previous) {
-        //Log::debug(__METHOD__."(".__LINE__."):  newText");
         Log::debug('newText:', $newText);
         // user didn't scan anything, probably just hit a button
         if(!isset($newText[self::TEXT])) {
@@ -421,7 +444,6 @@ class ArticleFlow {
         }
 
         Log::debug('entry: '.serialize($entry));
-        //Log::debug(serialize($entry));
         return $entry;
     }
 
@@ -431,7 +453,7 @@ class ArticleFlow {
         // is entered text formatted like a Carton_ID?
         $regex = '/^\d{2} \d{4} \d{4}$/';
         if(isset($entry->Text) and preg_match($regex, $entry->Text)) {
-            Log::debug(__METHOD__."(".__LINE__."):  formatted as Carton_ID: $entry->Text");
+            Log::debug("formatted as Carton_ID: $entry->Text");
             $entry->type = self::TOTE;
 
             // does this UPC have an open tote?
@@ -455,12 +477,12 @@ class ArticleFlow {
     protected function putUPCinTote($previous, $entry) {
         $upcID = $previous->objectID;
         $toteID = $entry->objectID;
-        Log::debug(__METHOD__."(".__LINE__."):  upcID: $upcID, toteID: $toteID");
+        Log::debug("upcID: $upcID, toteID: $toteID");
 
         // gather relevant data
         $podID = Session::get('podID');
         $articleID = Session::get('articleID');
-        Log::debug(__METHOD__."(".__LINE__."):  podID: $podID, articleID: $articleID");
+        Log::debug("podID: $podID, articleID: $articleID");
         $tote = $this->toteRepository->find($toteID);
         $pod = $this->purchaseOrderDetailRepository->find($podID);
         $po = $this->purchaseOrderRepository->findID($pod->Order_Number);
@@ -537,15 +559,15 @@ class ArticleFlow {
         ];
         $userActivity = $this->userActivityRepository->filterOn($filter, 1);
         if(isset($userActivity) && is_a($userActivity, 'vital40\UserActivity')) {
-            Log::debug(__METHOD__."(".__LINE__."):  vital40\\UserActivity found: ".$userActivity->Purpose);
+            Log::debug("vital40\\UserActivity found: ".$userActivity->Purpose);
             $locationID = $userActivity->id;
         } elseif(isset($userActivity) && is_a($userActivity, 'Illuminate\Database\Eloquent\Collection')) {
-            Log::debug(__METHOD__."(".__LINE__."):  Illuminate\\Database\\Eloquent\\Collection found: ".$userActivity[0]->Purpose);
+            Log::debug("Illuminate\\Database\\Eloquent\\Collection found: ".$userActivity[0]->Purpose);
             $locationID = $userActivity[0]->id;
         } elseif(isset($userActivity)) {
-            Log::debug(__METHOD__."(".__LINE__."):  UserActivity class: ".get_class($userActivity));
+            Log::debug("UserActivity class: ".get_class($userActivity));
         }
-        Log::debug(__METHOD__."(".__LINE__."):  returning $locationID");
+        Log::debug("returning $locationID");
 
         return $locationID;
     }
@@ -556,7 +578,7 @@ class ArticleFlow {
      */
     protected function toteHasOtherUPCs($upcID, $toteID) {
         $articleID = Session::get('articleID');
-        Log::debug(__METHOD__."(".__LINE__."):  upcID: $upcID, toteID: $toteID");
+        Log::debug("upcID: $upcID, toteID: $toteID");
         $article = $this->articleRepository->find($articleID);
 
         $otherUPC = False;
@@ -593,7 +615,7 @@ class ArticleFlow {
      */
     protected function upcHasOpenTote($upcID) {
         $articleID = Session::get('articleID');
-        Log::debug(__METHOD__."(".__LINE__."):  upcID: $upcID");
+        Log::debug("upcID: $upcID");
         $article = $this->articleRepository->find($articleID);
         $locationID = $this->findLocationID();
 
@@ -603,7 +625,7 @@ class ArticleFlow {
         $totes = $this->toteRepository->filterOn(['THOU.Location.parent' => $locationID]);
         if(isset($totes) && count($totes) > 0) {
             foreach($totes as $tote) {
-                Log::debug(__METHOD__."(".__LINE__."):  Tote: $tote->Carton_ID");
+                Log::debug("Tote: $tote->Carton_ID");
                 $inventoriesInTote = $this->inventoryRepository->filterOn(['THOU.container.parent' => $tote->objectID]);
                 if(isset($article->split) && $article->split == 'N') {
                     // in comingling case, make sure all UPCs are from the same Article
@@ -629,7 +651,7 @@ class ArticleFlow {
                 }
             }
         }
-        Log::debug(__METHOD__."(".__LINE__."):  toteID: $toteID");
+        Log::debug("toteID: $toteID");
 
         return $toteID;
     }
@@ -651,7 +673,7 @@ class ArticleFlow {
     7 rows in set (0.04 sec)
      */
     protected function findOrCreateInventory($upc, $pod, $tote) {
-        Log::debug(__METHOD__."(".__LINE__."):  findOrCreateInventory($upc->objectID, $pod->objectID, $tote->objectID)");
+        Log::debug("findOrCreateInventory($upc->objectID, $pod->objectID, $tote->objectID)");
 
         $filter = [
             'Item'             => $upc->objectID,
@@ -673,25 +695,24 @@ class ArticleFlow {
             $inventory = $this->inventoryRepository->create($input);
         }
 
-        Log::debug(__METHOD__."(".__LINE__."):  inventory");
-        Log::debug($inventory->objectID);
+        Log::debug("inventory: $inventory->objectID");
         return $inventory;
     }
 
     protected function closeTote($previous, $entry) {
         $toteID = $previous->objectID;
         $palletID = $entry->objectID;
-        Log::debug(__METHOD__."(".__LINE__."):  toteID: $toteID, palletID: $palletID");
+        Log::debug("toteID: $toteID, palletID: $palletID");
 
         // gather relevant data
         $podID = Session::get('podID');
         $articleID = Session::get('articleID');
-        Log::debug(__METHOD__."(".__LINE__."):  podID: $podID, articleID: $articleID");
+        Log::debug("podID: $podID, articleID: $articleID");
         $tote = $this->toteRepository->find($toteID);
         $pod = $this->purchaseOrderDetailRepository->find($podID);
         $po = $this->purchaseOrderRepository->findID($pod->Order_Number);
         $locationID = $this->findLocationID();
-        Log::debug(__METHOD__."(".__LINE__."):  locationID: $locationID");
+        Log::debug("locationID: $locationID");
 
         // Is this tote empty?
         if($this->toteRepository->isEmpty($toteID)) {
@@ -705,11 +726,11 @@ class ArticleFlow {
          * At this point we have a tote, have asked receiver which cart to put it on,
          * and user has responded $palletID.
          */
-        Log::debug(__METHOD__."(".__LINE__."):  find Pallet: $palletID");
+        Log::debug("find Pallet: $palletID");
         $pallet = $this->palletRepository->find($palletID);
 
         // place this tote onto this cart
-        Log::debug(__METHOD__."(".__LINE__."):  putToteIntoPallet: $toteID, $palletID");
+        Log::debug("putToteIntoPallet: $toteID, $palletID");
         $this->palletRepository->putToteIntoPallet($toteID, $palletID);
 
         /*
@@ -717,7 +738,7 @@ class ArticleFlow {
          * - apply status change to the Tote
          * - apply status change to the Cart
          */
-        Log::debug(__METHOD__."(".__LINE__."):  Inventory filterOn([container.parent => $toteID])");
+        Log::debug("Inventory filterOn([container.parent => $toteID])");
         $inventories = $this->inventoryRepository->filterOn(['THOU.container.parent' => $toteID]);
         foreach($inventories as $inventory) {
             $this->inventoryRepository->update($inventory->objectID, ['Status' => Config::get('constants.inventory.status.putAway')]);
@@ -725,7 +746,7 @@ class ArticleFlow {
         $tote->update(['Status' => Config::get('constants.tote.status.putAway')]);
         //TODO do the TODO in DBPalletRepository then instate this next line
         //$pallet->update(['Status' => Config::get('constants.pallet.status.putAway')]);
-        Log::debug(__METHOD__."(".__LINE__."):  Pallet update([Status => putAway])");
+        Log::debug("Pallet update([Status => putAway])");
         $this->palletRepository->update($palletID, ['Status' => Config::get('constants.pallet.status.putAway')]);
 
         // build our responseKey
@@ -738,7 +759,7 @@ class ArticleFlow {
             , 'Tote' => $toteID, 'Cart' => $palletID, 'Location' => $locationID
             , 'User_Name' => Auth::user()->name, 'Activity' => $activity];
             // we don't have values for: 'UPC' => '6217092826', 'Inventory' => '6231963444',
-        Log::debug(__METHOD__."(".__LINE__."):  ReceiptHistory create(..): success");
+        Log::debug("ReceiptHistory create(..): success");
         $this->receiptHistoryRepository->create($receipt);
         $responseKey['receipt'] = 'refresh';
         $responseKey['closeTote'] = 'refresh';
@@ -749,12 +770,12 @@ class ArticleFlow {
 
     protected function scannedUPC($entry) {
         $upcID = $entry->objectID;
-        Log::debug(__METHOD__."(".__LINE__."):  upcID: $upcID");
+        Log::debug("upcID: $upcID");
 
         // gather relevant data
         $podID = Session::get('podID');
         $articleID = Session::get('articleID');
-        Log::debug(__METHOD__."(".__LINE__."):  podID: $podID, articleID: $articleID");
+        Log::debug("podID: $podID, articleID: $articleID");
         $pod = $this->purchaseOrderDetailRepository->find($podID);
         $article = $this->articleRepository->find($articleID);
         //$upc = $this->upcRepository->find($upcID);
@@ -775,7 +796,7 @@ class ArticleFlow {
             return $responseKey;
         }
 
-        Log::debug(__METHOD__."(".__LINE__."):  build our responseKey");
+        Log::debug("build our responseKey");
         // build our responseKey
         $responseKey = ['key' => 'scannedUPC', 'upcID' => $upcID, 'Description' => $upc->Description
             , 'mode' => self::RECEIVE_UPC, 'time' => Carbon::now()];
@@ -792,7 +813,7 @@ class ArticleFlow {
             $filter['Order_Line'] = $pod->objectID;
         }
         $inventory = $this->inventoryRepository->filterOn($filter, 1);
-        Log::debug(__METHOD__."(".__LINE__."):  looking for inventory: ");
+        Log::debug("looking for inventory: ");
         Log::debug($inventory);
         if(isset($inventory)) {
             // what tote is this inventory in?
@@ -803,35 +824,35 @@ class ArticleFlow {
             }
         }
 
-        Log::debug(__METHOD__."(".__LINE__."):  return our responseKey");
+        Log::debug("return our responseKey");
         // return our responseKey
         return $responseKey;
     }
 
     protected function scannedTote($previous, $entry) {
         $toteID = $entry->objectID;
-        Log::debug(__METHOD__."(".__LINE__."):  toteID: $toteID");
+        Log::debug("toteID: $toteID");
 
         // gather relevant data
         $podID = Session::get('podID');
         $articleID = Session::get('articleID');
-        Log::debug(__METHOD__."(".__LINE__."):  podID: $podID, articleID: $articleID");
+        Log::debug("podID: $podID, articleID: $articleID");
         $pod = $this->purchaseOrderDetailRepository->find($podID);
 
         // error if $toteID is not on a $pallet of this location
         $locationID = $this->findLocationID();
-        Log::debug(__METHOD__."(".__LINE__."):  found locationID: $locationID");
+        Log::debug("found locationID: $locationID");
         $locationsPallet = $this->palletRepository->findOrCreate(['container.parent' => $locationID]);
         $tote = $this->toteRepository->find($toteID);
-        Log::debug(__METHOD__."(".__LINE__."):  looking for totesPallet of toteID: $tote->objectID");
+        Log::debug("looking for totesPallet of toteID: $tote->objectID");
         $totesPallet = $this->palletRepository->filterOn(['container.child' => $tote->objectID],1);
-        Log::debug(__METHOD__."(".__LINE__."):  totesPallet: ".(isset($totesPallet) ? $totesPallet->objectID : "not found"));
+        Log::debug("totesPallet: ".(isset($totesPallet) ? $totesPallet->objectID : "not found"));
         if(!isset($totesPallet)) {
             // new tote not yet on a Pallet
             $this->palletRepository->putToteIntoPallet($tote->objectID, $locationsPallet->objectID);
             $totesPallet = $locationsPallet;
         }
-        Log::debug(__METHOD__."(".__LINE__."):  totesPallet: $totesPallet->objectID, locationsPallet: $locationsPallet->objectID");
+        Log::debug("totesPallet: $totesPallet->objectID, locationsPallet: $locationsPallet->objectID");
         if($totesPallet->objectID != $locationsPallet->objectID) {
             $responseKey = ['key' => 'scannedTote', 'toteID' => $toteID, 'cartonID' => $tote->Carton_ID, 'Location' => $locationID
                 , 'mode' => ($previous->type == self::UPC ? self::RECEIVE_UPC : self::CLOSE_TOTE), 'time' => Carbon::now()];
@@ -870,7 +891,7 @@ class ArticleFlow {
             'Sender_Name' => Config::get('constants.application.name'),
         ];
 
-        Log::debug(__METHOD__."(".__LINE__."):  entry");
+        Log::debug("entry");
         Log::debug(serialize($entry));
         Log::debug($responseKey);
 

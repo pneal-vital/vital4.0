@@ -72,6 +72,10 @@ class VITaL40ServiceProvider extends ServiceProvider {
             'vital40\Repositories\DBRoleRepository'
         );
         $this->app->bind(
+            'vital40\Repositories\SessionTypeRepositoryInterface',
+            'vital40\Repositories\DBSessionTypeRepository'
+        );
+        $this->app->bind(
             'vital40\Repositories\ToteRepositoryInterface',
             'vital40\Repositories\DBToteRepository'
         );

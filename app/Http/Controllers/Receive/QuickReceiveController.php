@@ -88,7 +88,8 @@ class QuickReceiveController extends Controller
     public function index() {
         if(Entrust::can('receive') == false) return redirect()->route('home');
 
-        Log::debug(__METHOD__.'('.__LINE__.')');
+        Log::debug((Request::ajax() ? 'Ajax Input' : 'Http Input'), Input::all());
+        Log::debug('Auth User: '.Auth::user()->name);
         //$quickReceive = (object)[];
         $quickReceive = (object) Request::all();
         if(Session::has('classID')) {
@@ -186,7 +187,7 @@ class QuickReceiveController extends Controller
             $filter['upcID'] = $quickReceive->UPC;
         }
         if(count($filter)) {
-            Log::debug(__METHOD__."(".__LINE__."):  calling calculatePickFaceLines",$filter);
+            Log::debug("calling calculatePickFaceLines",$filter);
             $pickFaceLines = $this->calculatePickFaceLines($filter);
             //$sessionData = Session::all();
             //$user = Auth::user();
@@ -196,9 +197,6 @@ class QuickReceiveController extends Controller
 
         // retrieve current UserConversation
         $userConversations = $this->getUserConversations();
-
-        //$locationID = Session::get('locationID');
-        //dd(__METHOD__.'('.__LINE__.')', compact('quickReceive', 'locations', 'purchaseOrder', 'purchaseOrders', 'receiveArticle', 'receiveArticles', 'reworks', 'upcGridLines', 'pickFaceLines', 'userConversations'));
 
         // Using the view(..) helper function
         return view('pages.quickReceive.index', compact('quickReceive', 'locations', 'purchaseOrder', 'purchaseOrders', 'receiveArticle', 'receiveArticles', 'reworks', 'upcGridLines', 'pickFaceLines', 'userConversations'));
@@ -212,15 +210,15 @@ class QuickReceiveController extends Controller
 
         //check if its our form
         if( Session::token() !== Input::get( '_token' ) ) {
-            Log::error(__METHOD__.'('.__LINE__.'):   token: '.Session::token());
-            Log::error(__METHOD__.'('.__LINE__.'):  _token: '.Input::get( '_token' ));
+            Log::error('token: '.Session::token());
+            Log::error('_token: '.Input::get( '_token' ));
             if(Request::ajax())
                 return Response::json(['msg' => 'Unauthorized attempt to refresh texting area']);
             else
                 return redirect()->route('home');
         }
 
-        Log::debug(__METHOD__.'('.__LINE__.'):  '.(Request::ajax() ? 'Ajax Input' : 'Http Input'), Input::all());
+        Log::debug((Request::ajax() ? 'Ajax Input' : 'Http Input'), Input::all());
 
         $quickReceive = (object) Request::all();
         //dd(__METHOD__.'('.__LINE__.')', compact('quickReceive'));
@@ -325,7 +323,7 @@ class QuickReceiveController extends Controller
         }
 
         if(count($errors) == 0) {
-            Log::debug(__METHOD__."(".__LINE__."):  has podID: ".(Session::has('podID') ? Session::get('podID') : 'unknown').
+            Log::debug("has podID: ".(Session::has('podID') ? Session::get('podID') : 'unknown').
                 ", has Location: ".(Session::has('locationID') ? Session::get('locationID') : 'unknown'));
             // Add Location to PurchaseOrderDetail
             if(Session::has('locationID')) {
@@ -351,7 +349,7 @@ class QuickReceiveController extends Controller
                 Session::put('classID', 'Article');
             }
 
-            Log::debug(__METHOD__."(".__LINE__."):  articleID: ".(Session::has('articleID') ? Session::get('articleID') : 'unknown').
+            Log::debug("articleID: ".(Session::has('articleID') ? Session::get('articleID') : 'unknown').
                 ", receiveArticles: ".(isset($receiveArticles) && count($receiveArticles) ? count($receiveArticles) : 'none').
                 ", Rework: ".(Input::has('Rework') ? Input::get('Rework') : 'unknown'));
             // if we need to, update rework value
@@ -363,7 +361,7 @@ class QuickReceiveController extends Controller
         }
 
         // retrieve current open tote upc quantities
-        Log::debug(__METHOD__."(".__LINE__."):  location: ".(Session::has('locationID') ? Session::get('locationID') : 'not set').
+        Log::debug("location: ".(Session::has('locationID') ? Session::get('locationID') : 'not set').
             ", purchaseOrderDetail: ".(Session::has('podID') ? Session::get('podID') : 'not set'));
         $upcGridLines = $this->calculateUPCGridLines(Session::get('podID'));
 
@@ -375,7 +373,7 @@ class QuickReceiveController extends Controller
             $filter['upcID'] = $quickReceive->UPC;
         }
         if(count($filter)) {
-            Log::debug(__METHOD__."(".__LINE__."):  calling calculatePickFaceLines",$filter);
+            Log::debug("calling calculatePickFaceLines",$filter);
             $pickFaceLines = $this->calculatePickFaceLines($filter);
         }
 
@@ -405,7 +403,7 @@ class QuickReceiveController extends Controller
         $errors=[];
 
         $quickReceive = (object) Request::all();
-        Log::debug(__METHOD__.'('.__LINE__.'):  show('.$id.')');
+        Log::debug('show('.$id.')');
 
         // what object has this $id
         if(Session::has('classID')) {
@@ -416,7 +414,7 @@ class QuickReceiveController extends Controller
                 $classID = $voObject->classID;
         }
 
-        Log::debug(__METHOD__.'('.__LINE__.'):  classID: '.(isset($classID) ? $classID : 'not set'));
+        Log::debug('classID: '.(isset($classID) ? $classID : 'not set'));
         // re-establish what the session already knows
         if(!isset($classID) or $classID != 'Location')
             if(Session::has('locationID')) {
@@ -440,17 +438,17 @@ class QuickReceiveController extends Controller
         // process $id
         if(isset($classID) && strlen($classID) > 0) {
             if($classID == 'Location') {
-                Log::debug(__METHOD__.'('.__LINE__.'):  Work_Table selected: '.$id);
+                Log::debug('Work_Table selected: '.$id);
                 // Validate Location
                 $quickReceive->Work_Table = $id;
 
             } elseif($classID == 'Purchase_Order') {
-                Log::debug(__METHOD__.'('.__LINE__.'):  Purchase_Order selected: '.$id);
+                Log::debug('Purchase_Order selected: '.$id);
                 $purchaseOrder = $this->purchaseOrderRepository->find($id);
                 $quickReceive->Purchase_Order = $purchaseOrder->Purchase_Order;
 
             } elseif($classID == 'Article' or $classID == 'Inbound_Order_Detail') {
-                Log::debug(__METHOD__.'('.__LINE__.'):  Article selected: '.$id);
+                Log::debug('Article selected: '.$id);
                 // Validate Article
                 $quickReceive->podID = $id;
                 $purchaseOrderDetail = $this->purchaseOrderDetailRepository->find($id);
@@ -462,7 +460,7 @@ class QuickReceiveController extends Controller
             // test the $id, may be a Purchase_Order number
             $purchaseOrder = $this->purchaseOrderRepository->filterOn(['Purchase_Order' => $id],1);
             if(isset($purchaseOrder)) {
-                Log::debug(__METHOD__.'('.__LINE__.'):  Purchase_Order selected: '.$id);
+                Log::debug('Purchase_Order selected: '.$id);
                 $quickReceive->Purchase_Order = $purchaseOrder->Purchase_Order;
             }
         }
@@ -475,7 +473,7 @@ class QuickReceiveController extends Controller
         $this->validateArticle($quickReceive, $errors);
 
         if(count($errors) == 0) {
-            Log::debug(__METHOD__."(".__LINE__."):  has podID: ".(Session::has('podID') ? Session::get('podID') : 'unknown').
+            Log::debug("has podID: ".(Session::has('podID') ? Session::get('podID') : 'unknown').
                 ", has Location: ".(Session::has('locationID') ? Session::get('locationID') : 'unknown'));
             // Add Location to PurchaseOrderDetail
             if(Session::has('locationID')) {
@@ -500,7 +498,7 @@ class QuickReceiveController extends Controller
                 Session::put('classID', 'Article');
             }
 
-            Log::debug(__METHOD__."(".__LINE__."):  has articleID: ".(Session::has('articleID') ? Session::get('articleID') : 'unknown').
+            Log::debug("has articleID: ".(Session::has('articleID') ? Session::get('articleID') : 'unknown').
                 ", has Rework: ".(Input::has('Rework') ? Input::get('Rework') : 'unknown'));
             // if we need to, update rework value
             if(Session::has('articleID') && Input::has('Rework') && Input::get('Rework') != '0') {
@@ -515,7 +513,7 @@ class QuickReceiveController extends Controller
         }
 
         // retrieve current open tote upc quantities
-        Log::debug(__METHOD__."(".__LINE__."):  location: ".(Session::has('locationID') ? Session::get('locationID') : 'not set').
+        Log::debug("location: ".(Session::has('locationID') ? Session::get('locationID') : 'not set').
             ", purchaseOrderDetail: ".(Session::has('podID') ? Session::get('podID') : 'not set'));
         $upcGridLines = $this->calculateUPCGridLines(Session::get('podID'));
 
@@ -527,7 +525,7 @@ class QuickReceiveController extends Controller
             $filter['upcID'] = $quickReceive->UPC;
         }
         if(count($filter)) {
-            Log::debug(__METHOD__."(".__LINE__."):  calling calculatePickFaceLines",$filter);
+            Log::debug("calling calculatePickFaceLines",$filter);
             $pickFaceLines = $this->calculatePickFaceLines($filter);
         }
 
@@ -552,7 +550,7 @@ class QuickReceiveController extends Controller
             return Response::json(['msg' => 'Unauthorized attempt to refresh the UPC grid']);
         }
 
-        Log::debug(__METHOD__.'('.__LINE__.'):  '.(Request::ajax() ? 'Ajax Input' : 'Http Input'), Input::all());
+        Log::debug((Request::ajax() ? 'Ajax Input' : 'Http Input'), Input::all());
 
         $locationID = Session::get('locationID');
         $podID = Session::get('podID');
@@ -561,7 +559,6 @@ class QuickReceiveController extends Controller
         $upcGridLines = $this->calculateUPCGridLines($podID);
 
         $jsonResponse = Response::json( compact('upcGridLines') );
-        Log::debug(__METHOD__.'('.__LINE__.'):  jsonResponse');
         //Log::debug(var_dump($jsonResponse));
         Log::debug($jsonResponse);
 
@@ -574,18 +571,18 @@ class QuickReceiveController extends Controller
     protected function calculateUPCGridLines($podID) {
         $results = [];
         $locationID = Session::get('locationID');
-        Log::debug(__METHOD__.'('.__LINE__.'):  LocationID: '.$locationID);
+        Log::debug('LocationID: '.$locationID);
         if(isset($locationID) && isset($podID)) {
             $pod = $this->purchaseOrderDetailRepository->find($podID);
-            Log::debug(__METHOD__.'('.__LINE__.'):  podID: '.$podID.',  pod: '.$pod->SKU);
+            Log::debug('podID: '.$podID.',  pod: '.$pod->SKU);
         }
         if(isset($pod)) {
             $article = $this->articleRepository->find($pod->SKU);
-            Log::debug(__METHOD__.'('.__LINE__.'):  Article: '.$article->Client_SKU);
+            Log::debug('Article: '.$article->Client_SKU);
         }
         if(isset($article)) {
             $upcs = $this->upcRepository->getArticleUPCs($article->objectID, 0);
-            Log::debug(__METHOD__.'('.__LINE__.'):  Article: '.$article->objectID.',  UPCs: '.count($upcs));
+            Log::debug('Article: '.$article->objectID.',  UPCs: '.count($upcs));
         }
         //dd(__METHOD__.'('.__LINE__.')',compact('locationID', 'podID', 'pod', 'article', 'upcs'));
 
@@ -628,7 +625,7 @@ class QuickReceiveController extends Controller
                         ];
                         $separator = '';
                         $toteData = $this->toteRepository->filterOn($filter);
-                        Log::debug(__METHOD__.'('.__LINE__.'):  toteData: ');
+                        Log::debug('toteData: ');
                         Log::debug($toteData);
                         foreach($toteData as $tote) {
                             if(isset($tote)) {
@@ -689,7 +686,7 @@ class QuickReceiveController extends Controller
             return Response::json(['msg' => 'Unauthorized attempt to refresh the pick face lines']);
         }
 
-        Log::debug(__METHOD__.'('.__LINE__.'):  '.(Request::ajax() ? 'Ajax Input' : 'Http Input'), Input::all());
+        Log::debug((Request::ajax() ? 'Ajax Input' : 'Http Input'), Input::all());
 
         // retrieve current open tote upc quantities
         $filter = [];
@@ -700,15 +697,13 @@ class QuickReceiveController extends Controller
             $filter['articleID'] = Session::get('articleID');
         }
         if(count($filter)) {
-            Log::debug(__METHOD__."(".__LINE__."):  calling calculatePickFaceLines",$filter);
+            Log::debug("calling calculatePickFaceLines",$filter);
             $pickFaceLines = $this->calculatePickFaceLines($filter);
         }
 
         $jsonResponse = Response::json( compact('pickFaceLines') );
-        Log::debug(__METHOD__.'('.__LINE__.'):  jsonResponse');
         //Log::debug(var_dump($jsonResponse));
         Log::debug($jsonResponse);
-
         return $jsonResponse;
     }
 
@@ -716,13 +711,13 @@ class QuickReceiveController extends Controller
      * List forward pick face, activity and reserve locations with quantity for this UPC.
      */
     protected function calculatePickFaceLines($filter) {
-        Log::debug(__METHOD__.'('.__LINE__.'):  filter: ',$filter);
+        Log::debug('filter: ',$filter);
         //dd(__METHOD__.'('.__LINE__.')',compact('filter'));
 
         $upcs = $this->upcRepository->combine($filter);
         //dd(__METHOD__.'('.__LINE__.')',compact('filter','upcs'));
 
-        Log::debug(__METHOD__.'('.__LINE__.'):  upcs: '.count($upcs));
+        Log::debug('upcs: '.count($upcs));
         /*
          * Ok, so what Inventory do we have of our list of UPCs?
          * 1. if UPC exists in a pick face, display pick face location, & inventory level
@@ -741,9 +736,7 @@ class QuickReceiveController extends Controller
         }
         //dd(__METHOD__.'('.__LINE__.')',compact('filter','upcs','onHandInventories','results'));
 
-        Log::debug(__METHOD__.'('.__LINE__.'):  results: ',$results);
-        Log::debug($results);
-
+        Log::debug('results: ',$results);
         return $results;
     }
 
@@ -758,15 +751,15 @@ class QuickReceiveController extends Controller
             return Response::json(['msg' => 'Unauthorized attempt to refresh texting area']);
         }
 
-        Log::debug(__METHOD__.'('.__LINE__.'):  '.(Request::ajax() ? 'Ajax Input' : 'Http Input'), Input::all());
+        Log::debug((Request::ajax() ? 'Ajax Input' : 'Http Input'), Input::all());
 
         $podID = Session::get('podID');
         $articleID = Session::get('articleID');
         $text_entry = Input::get( 'text_entry' );
         $clicked = Input::get('clicked');
+        if(isset($text_entry) == false && ($clicked == "btn-receive-upc" || $clicked == "btn-close-tote"))
+            $text_entry = "";
         Log::debug("podID: $podID, articleID: $articleID");
-        //Log::debug("text_entry: $text_entry, clicked: $clicked");
-        //Log::debug('clicked: '.$clicked);
 
         if(isset($podID) == False or isset($articleID) == False) {
             $responseText = [
@@ -799,11 +792,8 @@ class QuickReceiveController extends Controller
 
         // current UserConversation
         $userConversations = $this->getUserConversations();
-        //Log::debug(__METHOD__.'('.__LINE__.'):  userConversations');
-        //Log::debug($userConversations);
 
         $jsonResponse = Response::json( compact('userConversations', 'responseText') );
-        //Log::debug(__METHOD__.'('.__LINE__.'):  jsonResponse');
         Log::debug($jsonResponse);
 
         return $jsonResponse;
@@ -814,7 +804,7 @@ class QuickReceiveController extends Controller
      * @return array $result['verdict'] = 'valid' | 'not entered' | 'error'
      */
     protected function validateWorkTable(&$quickReceive, &$errors) {
-        Log::debug(__METHOD__.'('.__LINE__.'):  quickReceive->'
+        Log::debug('quickReceive->'
             . ' Work_Table: '.(isset($quickReceive->Work_Table) ? $quickReceive->Work_Table : '-' )
             .', Purchase_Order: '.(isset($quickReceive->Purchase_Order) ? $quickReceive->Purchase_Order : '-' )
             .', podID: '.(isset($quickReceive->podID) ? $quickReceive->podID : '-' )
@@ -888,7 +878,7 @@ class QuickReceiveController extends Controller
                 if(isset($podLocation)) {
                     //dd(__METHOD__.'('.__LINE__.')', compact('quickReceive', 'filter', 'purchaseOrderDetails', 'podLocation', 'result'));
                     if(!isset($quickReceive->Work_Table) || strlen($quickReceive->Work_Table) == 0) {
-                        Log::debug(__METHOD__."(".__LINE__."):  Work_Table: null, poda has location: $podLocation->Location_Name");
+                        Log::debug("Work_Table: null, poda has location: $podLocation->Location_Name");
 
                         // Location was not entered, but we found it using Article and/or UPC
                         $goodSoFar = True;
@@ -908,7 +898,7 @@ class QuickReceiveController extends Controller
                         unset($userActivities);
                     }
                     if($goodSoFar && $quickReceive->Work_Table != $podLocation->Location_Name) {
-                        Log::warning(__METHOD__."(".__LINE__."):  Work_Table: $quickReceive->Work_Table, != poda has location: $podLocation->Location_Name");
+                        Log::warning("Work_Table: $quickReceive->Work_Table, != poda has location: $podLocation->Location_Name");
 
                         // If there are open totes in purchaseOrderDetail->location, error message "Open totes for this Article or UPC" ..
                         $totes = $this->toteRepository->filterOn(['THOU.locID_and_podID' => [$purchaseOrderDetails[0]->Location, $purchaseOrderDetails[0]->objectID]],2);
@@ -948,7 +938,7 @@ class QuickReceiveController extends Controller
             Session::forget('locationID');
             unset($quickReceive->Rework);
         }
-        Log::debug(__METHOD__."(".__LINE__."):  result[verdict]: ".$result['verdict']);
+        Log::debug("result[verdict]: ".$result['verdict']);
 
         return $result;
     }
@@ -957,7 +947,7 @@ class QuickReceiveController extends Controller
         // set Session variables
         Session::put('locationID', $location->objectID);
         $quickReceive->Work_Table = $location->Location_Name;
-        Log::debug(__METHOD__."(".__LINE__."):  Work_Table: $quickReceive->Work_Table");
+        Log::debug("Work_Table: $quickReceive->Work_Table");
 
         //$requestAll = Request::all();
         //$sessionAll = Session::all();
@@ -999,7 +989,7 @@ class QuickReceiveController extends Controller
             if(count($purchaseOrders) == 1) {
                 $goodSoFar = True;
                 $purchaseOrder = $purchaseOrders[0];
-                Log::debug(__METHOD__.'('.__LINE__.'):  entered, found: '.$purchaseOrder->Purchase_Order);
+                Log::debug('entered, found: '.$purchaseOrder->Purchase_Order);
             } else {
                 $goodSoFar = False;
                 $result['verdict'] = 'error';
@@ -1024,7 +1014,7 @@ class QuickReceiveController extends Controller
                 $goodSoFar = True;
                 $purchaseOrder = $purchaseOrders[0];
                 $result['PO'] == 'implied by UPC or Article';
-                Log::debug(__METHOD__.'('.__LINE__.'):  implied by UPC or Article: '.$purchaseOrder->Purchase_Order);
+                Log::debug('implied by UPC or Article: '.$purchaseOrder->Purchase_Order);
             } elseif(count($purchaseOrders) == 0) {
                 if(count($filter) > 1) {
                     $params=[];
@@ -1042,14 +1032,14 @@ class QuickReceiveController extends Controller
         unset($purchaseOrders);
 
         if($result['PO'] == 'not entered') {
-            Log::debug(__METHOD__."(".__LINE__."):  Session locationID ".(Session::has('locationID') ? Session::get('locationID') : 'not yet established'));
+            Log::debug("Session locationID ".(Session::has('locationID') ? Session::get('locationID') : 'not yet established'));
             // check this Location for the PO of any open totes
             if(Session::has('locationID')) {
                 $locationID = Session::get('locationID');
                 $totes = $this->toteRepository->filterOn(['THOU.Location.parent' => $locationID],1);
                 if(isset($totes) and count($totes) > 0) {
                     $tote = $totes[0];
-                    Log::debug(__METHOD__."(".__LINE__."):  locationID: $locationID, tote ".(isset($tote) ? $tote->Carton_ID : "not found"));
+                    Log::debug("locationID: $locationID, tote ".(isset($tote) ? $tote->Carton_ID : "not found"));
                     $poIDs = $this->purchaseOrderRepository->filterOn(['THOU.container.Tote' => $tote->Carton_ID],0);
                     if(isset($poIDs) and count($poIDs) > 0) {
                         $purchaseOrder = $this->purchaseOrderRepository->find($poIDs[0]->Purchase_Order);
@@ -1079,7 +1069,7 @@ class QuickReceiveController extends Controller
             unset($quickReceive->Rework);
             unset($purchaseOrder);
         }
-        Log::debug(__METHOD__."(".__LINE__."):  result[verdict]: ".$result['verdict']);
+        Log::debug("result[verdict]: ".$result['verdict']);
         return $result;
     }
 
@@ -1087,7 +1077,7 @@ class QuickReceiveController extends Controller
         // set Session variables
         Session::put('poID', $purchaseOrder->objectID);
         $quickReceive->Purchase_Order = $purchaseOrder->Purchase_Order;
-        Log::debug(__METHOD__."(".__LINE__."):  Purchase_Order: $quickReceive->Purchase_Order");
+        Log::debug("Purchase_Order: $quickReceive->Purchase_Order");
 
         // record a text line
         $textLine = [
@@ -1160,13 +1150,13 @@ class QuickReceiveController extends Controller
             $result['verdict'] = 'not entered';
         }
 
-        Log::debug(__METHOD__."(".__LINE__."):  goodSoFar ".($goodSoFar ? "True" : "no").", count(filter): ".count($filter));
+        Log::debug("goodSoFar ".($goodSoFar ? "True" : "no").", count(filter): ".count($filter));
         // is entered value is a valid objectID or Client_SKU, can one pod be found?
         if(count($filter) > 1) {
             //dd(__METHOD__.'('.__LINE__.')', compact('quickReceive', 'filter', 'errors'));
             $purchaseOrderDetails = $this->purchaseOrderDetailRepository->filterOn($filter,2);
             //dd(__METHOD__.'('.__LINE__.')', compact('quickReceive', 'filter', 'purchaseOrderDetails', 'goodSoFar', 'result'));
-            Log::debug(__METHOD__."(".__LINE__."):  count(purchaseOrderDetails): ".count($purchaseOrderDetails));
+            Log::debug("count(purchaseOrderDetails): ".count($purchaseOrderDetails));
             if(count($purchaseOrderDetails) == 0) {
                 $goodSoFar = False;
                 $result['verdict'] = 'error';
@@ -1192,7 +1182,7 @@ class QuickReceiveController extends Controller
             }
         }
 
-        Log::debug(__METHOD__."(".__LINE__."):  goodSoFar ".($goodSoFar ? "True" : "no").", count(filter): ".count($filter).
+        Log::debug("goodSoFar ".($goodSoFar ? "True" : "no").", count(filter): ".count($filter).
             (isset($purchaseOrderDetails) ? ", count(purchaseOrderDetails): ".count($purchaseOrderDetails) : ", purchaseOrderDetails not set"));
         if($goodSoFar and count($filter) > 1) {
             if(count($purchaseOrderDetails) == 1) {
@@ -1216,14 +1206,14 @@ class QuickReceiveController extends Controller
          * Here we try to find the Article if it was not entered.
          */
 
-        Log::debug(__METHOD__."(".__LINE__."):  purchaseOrderDetail: ".(isset($purchaseOrderDetail) ? $purchaseOrderDetail->SKU : "not found"));
+        Log::debug("purchaseOrderDetail: ".(isset($purchaseOrderDetail) ? $purchaseOrderDetail->SKU : "not found"));
         if(isset($purchaseOrderDetail)) {
             //dd(__METHOD__.'('.__LINE__.')', compact('quickReceive', 'filter', 'purchaseOrderDetail', 'totes', 'errors'));
             $article = $this->articleRepository->find($purchaseOrderDetail->SKU);
             if(isset($article)) {
                 //dd(__METHOD__.'('.__LINE__.')', compact('quickReceive', 'filter', 'purchaseOrderDetail', 'article', 'totes', 'errors'));
                 if(!isset($quickReceive->Article) || strlen($quickReceive->Article) == 0) {
-                    Log::debug(__METHOD__."(".__LINE__."):  Article: null, found Article: $purchaseOrderDetail->SKU");
+                    Log::debug("Article: null, found Article: $purchaseOrderDetail->SKU");
 
                     // Article was not entered, but we found it using Location ..
                     $goodSoFar = True;
@@ -1232,16 +1222,16 @@ class QuickReceiveController extends Controller
             }
         }
 
-        Log::debug(__METHOD__."(".__LINE__."):  purchaseOrderDetail: ".(isset($purchaseOrderDetail) ? $purchaseOrderDetail->SKU : "not found"));
+        Log::debug("purchaseOrderDetail: ".(isset($purchaseOrderDetail) ? $purchaseOrderDetail->SKU : "not found"));
         if(!isset($purchaseOrderDetail)) {
-            Log::debug(__METHOD__."(".__LINE__."):  Session locationID: ".(Session::has('locationID') ? Session::get('locationID') : "not yet established"));
+            Log::debug("Session locationID: ".(Session::has('locationID') ? Session::get('locationID') : "not yet established"));
             // When the Article has not been set, check this Location for the Article of any open totes
             if(Session::has('locationID')) {
                 $locationID = Session::get('locationID');
                 $totes = $this->toteRepository->filterOn(['THOU.Location.parent' => $locationID],1);
                 if(isset($totes) and count($totes) > 0) {
                     $tote = $totes[0];
-                    Log::debug(__METHOD__."(".__LINE__."):  tote: ".$tote->Carton_ID);
+                    Log::debug("tote: ".$tote->Carton_ID);
                     $podIDs = $this->purchaseOrderDetailRepository->filterOn(['THOU.container.Tote' => $tote->Carton_ID],0);
                     if(isset($podIDs) and count($podIDs) > 0) {
 
@@ -1254,7 +1244,7 @@ class QuickReceiveController extends Controller
             }
         }
 
-        Log::debug(__METHOD__."(".__LINE__."):  goodSoFar ".($goodSoFar ? "True" : "no"));
+        Log::debug("goodSoFar ".($goodSoFar ? "True" : "no"));
         if($goodSoFar) {
             // is someone else tied to this Article?
             $userActivities = $this->userActivityRepository->getUserActivities($purchaseOrderDetail->objectID, Config::get('constants.userActivity.classID.ReceiveArticle'));
@@ -1281,9 +1271,9 @@ class QuickReceiveController extends Controller
         /*
          * When they attempt to change the Article, they must close all the open totes first.
          */
-        Log::debug(__METHOD__."(".__LINE__."):  purchaseOrderDetail: ".(isset($purchaseOrderDetail) ? $purchaseOrderDetail->SKU : "not found"));
+        Log::debug("purchaseOrderDetail: ".(isset($purchaseOrderDetail) ? $purchaseOrderDetail->SKU : "not found"));
         if(isset($purchaseOrderDetail)) {
-            Log::debug(__METHOD__."(".__LINE__."):  Session locationID: ".(Session::has('locationID') ? Session::get('locationID') : "not yet established"));
+            Log::debug("Session locationID: ".(Session::has('locationID') ? Session::get('locationID') : "not yet established"));
             // Check this location for open totes of this Article.
             if(Session::has('locationID') and Session::has('podID') and Session::get('podID') != $purchaseOrderDetail->objectID) {
                 $location = $this->locationRepository->find(Session::get('locationID'));
@@ -1292,7 +1282,7 @@ class QuickReceiveController extends Controller
                 if(isset($totes) and count($totes) > 0) {
                     $tote = $totes[0];
                     $article = $this->articleRepository->find($pod->SKU);
-                    Log::debug(__METHOD__."(".__LINE__."):  tote: ".$tote->Carton_ID." contains: ".$article->Client_SKU);
+                    Log::debug("tote: ".$tote->Carton_ID." contains: ".$article->Client_SKU);
                     $goodSoFar = False;
                     $result['verdict'] = 'error';
                     $errors['Article'][] = Lang::get('internal.errors.article.openTotes', ['Article' => $article->Client_SKU, 'ToteID' => $tote->Carton_ID, 'Location_Name' => $location->Location_Name]);
@@ -1303,7 +1293,7 @@ class QuickReceiveController extends Controller
                      * the error is that it is prevented even when the totes are not for this Article.
                      *
                     if($goodSoFar and isset($purchaseOrderDetail->Location)) {
-                        Log::debug(__METHOD__."(".__LINE__."):  Article: $quickReceive->Article, & found Article: $article->Client_SKU");
+                        Log::debug("Article: $quickReceive->Article, & found Article: $article->Client_SKU");
 
                         // If there are no open totes we can switch to that Article.
                         // if there are open totes, error message "Open totes for this Article or UPC" ..
@@ -1340,7 +1330,7 @@ class QuickReceiveController extends Controller
             unset($quickReceive->Rework);
         }
         unset($userActivities);
-        Log::debug(__METHOD__."(".__LINE__."):  result[verdict]: ".$result['verdict']);
+        Log::debug("result[verdict]: ".$result['verdict']);
 
         return $result;
     }
@@ -1363,7 +1353,7 @@ class QuickReceiveController extends Controller
                 $quickReceive->Comingled = '';
             }
             //dd(__METHOD__."(".__LINE__.")",compact('quickReceive','purchaseOrderDetail','article','quickReceive'));
-            Log::debug(__METHOD__."(".__LINE__."):  Article: $quickReceive->Article, Rework: $quickReceive->Rework, Comingled: $quickReceive->Comingled");
+            Log::debug("Article: $quickReceive->Article, Rework: $quickReceive->Rework, Comingled: $quickReceive->Comingled");
 
             // record a text line
             $textLine = [
@@ -1395,7 +1385,7 @@ class QuickReceiveController extends Controller
             $input_rework = Input::get('Rework');
             if( ctype_lower($input_rework{0}) ) {
                 $rework = Lang::get('lists.article.rework.'.Input::get('Rework'));
-                Log::debug(__METHOD__."(".__LINE__."):  articleID: $articleID, update Rework: $rework");
+                Log::debug("articleID: $articleID, update Rework: $rework");
                 $this->articleRepository->update($articleID, ['rework' => $rework]);
                 $quickReceive->Rework = $rework;
 
