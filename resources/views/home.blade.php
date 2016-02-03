@@ -11,6 +11,17 @@
                     Watch here for application news!
                     <p>This release contains these new features;
                     <ul>
+                        <li>Quick Receive, Improved scan UPC/tote transaction process</li>
+                        @if(Entrust::hasRole(['teamLead', 'super', 'manager', 'support']))
+                            <li>Reports, new Rework Report, save in csv or Excel formats</li>
+                        @endif
+                        @if(Entrust::hasRole(['admin', 'support']))
+                            <li>Admin menu, improved Permissions and Roles screens with Create, Edit and Delete icons.</li>
+                            <li>Admin menu, new RolePermissions screens manage permissions related to roles.</li>
+                        @endif
+                    </ul>
+                    <p>Previous release features;
+                    <ul>
                         <li>Quick Receive, Select a Location now has page forward</li>
                         <li>Quick Receive, Close tote now displays quantity in pick face locations, click on Pick Face location button</li>
                         <li>Quick Receive, UPC Grid lines showing expected vs received can hide, click on UPC Grid Lines button</li>
@@ -24,7 +35,7 @@
                             <li>UPC list now shows parent Articles and Quantities.</li>
                         @endif
                     </ul>
-                    <p>Previous release features;
+                    <p>Existing features;
                     <ul>
                         <li>List menu item show your Activities, Conversations.</li>
                         @if(Entrust::hasRole(['teamLead', 'super', 'manager', 'support']))
