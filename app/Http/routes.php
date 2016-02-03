@@ -220,3 +220,9 @@ Route::get('receiveArticle/{id}', ['as' => 'receiveArticle.show', 'uses' => 'Rec
 Route::post('receiveArticle/refresh', ['as' => 'receiveArticle.refresh', 'uses' => 'Receive\ReceiveArticleController@refresh']);
 Route::post('receiveArticle/texting', ['as' => 'receiveArticle.texting', 'uses' => 'Receive\ReceiveArticleController@texting']);
 
+//   Reports
+// Rework Report
+Route::get('reworkReport', ['as' => 'reworkReport.index', 'uses' => 'ReworkReportController@index']);
+Route::patch('reworkReport', ['as' => 'reworkReport.filter', 'uses' => 'ReworkReportController@filter']);
+Route::patch('reworkReport/export', ['as' => 'reworkReport.export', 'uses' => 'ReworkReportController@export']);
+

@@ -4,6 +4,7 @@ use App\Http\Requests\ReceiptHistoryRequest;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\View;
 use vital40\Repositories\ReceiptHistoryRepositoryInterface;
+use \Auth;
 use \Entrust;
 use \Request;
 
@@ -38,7 +39,7 @@ class ReceiptHistoryController extends Controller {
         $receiptHistory = Request::all();
         if(count($receiptHistory) == 0) {
             // lets provide a default filter
-            $receiptHistory['User_Name' ] = (is_null(\Auth::user()) ? 'RBowers' : \Auth::user()->name);
+            $receiptHistory['User_Name' ] = Auth::user()->name;
             $receiptHistory['created_at'] = Carbon::today()->format('Y-m');
         }
 

@@ -62,6 +62,17 @@ class DBReceiptHistoryRepository implements ReceiptHistoryRepositoryInterface {
 		if(isset($input['updated_at']) && strlen($input['updated_at']) > 6) {
 			$query = $query->where('updated_at', 'like', $input['updated_at'] . '%');
 		}
+		if(isset($input['fromDate']) && strlen($input['fromDate']) > 6
+		&& isset($input['toDate']) && strlen($input['toDate']) > 6) {
+            $query->orWhereBetween('created_at', [$input['fromDate'], $input['toDate']]);
+		}  else {
+			if(isset($input['fromDate']) && strlen($input['fromDate']) > 6) {
+				$query = $query->where('created_at', '>=', $input['fromDate']);
+			}
+			if(isset($input['toDate']) && strlen($input['toDate']) > 6) {
+				$query = $query->where('created_at', '<=', $input['toDate']);
+			}
+		}
 		if(isset($input['Activity']) && strlen($input['Activity']) > 3) {
 			$query = $query->where('Activity', 'like', $input['Activity'] . '%');
 		}

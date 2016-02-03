@@ -52,6 +52,29 @@
                         <li>{!! link_to_route('userConversation.index', Lang::get('labels.navbar.UserConversations')) !!}</li>
                     </ul>
                 </li>
+                {{-- TODO: New menu item should be replaced with [add], [update], [delete] buttons/icons on the various List screens  --}}
+                @if(Entrust::hasRole(['support']))
+                    <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">@lang('labels.navbar.New') <span class="caret"></span></a>
+                        <ul class="dropdown-menu">
+                            @if(Entrust::hasRole(['support']))
+                                <li>{!! link_to_route('inboundOrder.create', Lang::get('labels.navbar.InboundOrder')) !!}</li>
+                                <li>{!! link_to_route('inboundOrderDetail.create', Lang::get('labels.navbar.InboundOrderDetail')) !!}</li>
+                            @endif
+                            <li>{!! link_to_route('inventory.create', Lang::get('labels.navbar.Inventory')) !!}</li>
+                            <li>{!! link_to_route('location.create', Lang::get('labels.navbar.Location')) !!}</li>
+                            <li>{!! link_to_route('pallet.create', Lang::get('labels.navbar.Pallet')) !!}</li>
+                            <li>{!! link_to_route('performanceTally.create', Lang::get('labels.navbar.PerformanceTally')) !!}</li>
+                            @if(Entrust::hasRole(['support']))
+                                <li>{!! link_to_route('receiptHistory.create', Lang::get('labels.navbar.ReceiptHistory')) !!}</li>
+                            @endif
+                            <li>{!! link_to_route('tote.create', Lang::get('labels.navbar.Tote')) !!}</li>
+                            <li>{!! link_to_route('userActivity.create', Lang::get('labels.navbar.UserActivity')) !!}</li>
+                            @if(Entrust::hasRole(['support']))
+                                <li>{!! link_to_route('userConversation.create', Lang::get('labels.navbar.UserConversation')) !!}</li>
+                            @endif
+                        </ul>
+                    </li>
+                @endif
                 @if(Entrust::hasRole(['receiver']))
                     <li>{!! link_to_route('quickReceive.index', Lang::get('labels.navbar.QuickReceive')) !!}</li>
                 @endif
@@ -67,32 +90,13 @@
                         </ul>
                     </li>
                 @endif
-                {{-- TODO: New menu item should be replaced with [add], [update], [delete] buttons/icons on the various List screens  --}}
-                @if(Entrust::hasRole(['support']))
-                    <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">@lang('labels.navbar.New') <span class="caret"></span></a>
+                @if(Entrust::hasRole(['teamLead', 'super', 'manager', 'support']))
+                    <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">@lang('labels.navbar.Report') <span class="caret"></span></a>
                         <ul class="dropdown-menu">
-                            <li>{!! link_to_route('article.create', Lang::get('labels.navbar.Article')) !!}</li>
-                            @if(Entrust::hasRole(['support']))
-                                <li>{!! link_to_route('inboundOrder.create', Lang::get('labels.navbar.InboundOrder')) !!}</li>
-                                <li>{!! link_to_route('inboundOrderDetail.create', Lang::get('labels.navbar.InboundOrderDetail')) !!}</li>
-                            @endif
-                            <li>{!! link_to_route('inventory.create', Lang::get('labels.navbar.Inventory')) !!}</li>
-                            <li>{!! link_to_route('location.create', Lang::get('labels.navbar.Location')) !!}</li>
-                            <li>{!! link_to_route('pallet.create', Lang::get('labels.navbar.Pallet')) !!}</li>
-                            <li>{!! link_to_route('performanceTally.create', Lang::get('labels.navbar.PerformanceTally')) !!}</li>
-                            @if(Entrust::hasRole(['support']))
-                                <li>{!! link_to_route('receiptHistory.create', Lang::get('labels.navbar.ReceiptHistory')) !!}</li>
-                            @endif
-                            <li>{!! link_to_route('tote.create', Lang::get('labels.navbar.Tote')) !!}</li>
-                            <li>{!! link_to_route('upc.create', Lang::get('labels.navbar.UPC')) !!}</li>
-                            <li>{!! link_to_route('userActivity.create', Lang::get('labels.navbar.UserActivity')) !!}</li>
-                            @if(Entrust::hasRole(['support']))
-                                <li>{!! link_to_route('userConversation.create', Lang::get('labels.navbar.UserConversation')) !!}</li>
-                            @endif
+                            <li>{!! link_to_route('reworkReport.index', Lang::get('labels.navbar.Rework')) !!}</li>
                         </ul>
                     </li>
                 @endif
-                {{-- TODO: Add a new Reports menu item which should gather relavant data, and submit background task requests --}}
             </ul>
             <ul class="nav nav-pills navbar-nav navbar-right">
                 @if(Entrust::hasRole(['admin','support']))

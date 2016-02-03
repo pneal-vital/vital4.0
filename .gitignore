@@ -1,5 +1,7 @@
 /storage
 /vendor
 .env
+*.awk
 *.notes
+*.swp
 promote.sh*

@@ -31,6 +31,7 @@ class CreatorServiceProvider extends ServiceProvider {
             'pages.associateNumber.index',
             'pages.poReconciliation.show',
             'pages.productivityNumber.index',
+            'pages.reworkReport.index',
         ], 'App\Http\ViewCreators\ExportTypeCreator');
 
         /* Clients */

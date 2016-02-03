@@ -170,6 +170,12 @@ return [
          */
         'Maatwebsite\Excel\ExcelServiceProvider',
 
+        /*
+         * Laravel 5 IDE Helper Generator
+         * see: https://github.com/barryvdh/laravel-ide-helper
+         */
+        Barryvdh\LaravelIdeHelper\IdeHelperServiceProvider::class,
+
     ],
 
     /*
