@@ -35,11 +35,9 @@
         @lang('internal.permission.allows', ['display_name' => $permission->display_name, 'description' => $permission->description])
     </div>
 
-    @include('errors.list')
-
     {{--
-        * Table Structure
-        * desc permissions;
+    * Table Structure
+    * desc permissions;
     +--------------+------------------+------+-----+---------------------+----------------+
     | Field        | Type             | Null | Key | Default             | Extra          |
     +--------------+------------------+------+-----+---------------------+----------------+

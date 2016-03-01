@@ -3,8 +3,11 @@
 use App\Http\Requests\UserRequest;
 use Illuminate\Support\Facades\View;
 use vital40\Repositories\UserRepositoryInterface;
+use vital40\Repositories\RoleUserRepositoryInterface;
+use \Auth;
 use \Entrust;
-use \Request;
+use \Lang;
+use \Log;
 
 /**
  * Class UserController
@@ -12,16 +15,22 @@ use \Request;
  */
 class UserController extends Controller {
 
+    use SaveRequest;
+
 	/**
 	 * Reference an implementation of the Repository Interface
-	 * @var vital40\Repositories\UserRepositoryInterface
-	 */ 
+	 */
+	protected $roleUserRepository;
 	protected $userRepository;
 
 	/**
 	 * Constructor requires User Repository
 	 */ 
-	public function __construct(UserRepositoryInterface $userRepository) {
+	public function __construct(
+		  RoleUserRepositoryInterface $roleUserRepository
+		, UserRepositoryInterface $userRepository
+    ) {
+		$this->roleUserRepository = $roleUserRepository;
 		$this->userRepository = $userRepository;
 	}
 
@@ -29,17 +38,9 @@ class UserController extends Controller {
 	 * Display a Listing of the resource.
 	 */
 	public function index() {
-        if(Entrust::hasRole('support') == false) {
-            // Entrust::hasRole('role-name');
-            // Entrust::can('permission-name');
-            if(Entrust::hasRole('admin') == false) return redirect()->route('home');
-        }
+        if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('user.view'))) return redirect()->route('home');
 
-        $user = Request::all();
-        if(count($user) == 0) {
-            // lets provide a default filter
-            //$user['..'] = ..;
-        }
+        $user = $this->getRequest('User');
 
 		// using an implementation of the User Repository Interface
 		$users = $this->userRepository->paginate($user);
@@ -52,11 +53,9 @@ class UserController extends Controller {
 	 * Display a Filtered Listing of the resource.
 	 */
 	public function filter() {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-        }
+        if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('user.view'))) return redirect()->route('home');
 
-		$user = Request::all();
+		$user = $this->getRequest('User');
 
 		// using an implementation of the User Repository Interface
 		$users = $this->userRepository->paginate($user);
@@ -69,26 +68,26 @@ class UserController extends Controller {
 	 * Display a specific resource
 	 */
 	public function show($id) {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-        }
+        if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('user.view'))) return redirect()->route('home');
 
 		// using an implementation of the User Repository Interface
 		$user = $this->userRepository->find($id);
-		//dd($user);
+        $userRoles = $this->roleUserRepository->filterOn([ 'user_id' => $id ], 0);
+        $roles = array();
+        foreach($userRoles as $userRole) {
+            $roles[] = $userRole->role;
+        }
 
-		return view('pages.user.show', compact('user'));
+        //dd(__METHOD__.'('.__LINE__.')',compact('id','user','userRoles','roles'));
+        return view('pages.user.show', compact('user', 'roles'));
 	}
 
 	/**
 	 * Create a new resource.
 	 */
 	public function create() {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-            // if guest or cannot user.create, redirect -> home
-            if (Entrust::can('user.create') == false) return redirect()->route('home');
-        }
+        if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('user.create'))) return redirect()->route('home');
+        Log::debug('create');
 
 		return view('pages.user.create');
 	}
@@ -99,11 +98,8 @@ class UserController extends Controller {
 	 * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
 	 */
 	public function store(UserRequest $request) {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-            // if guest or cannot user.create, redirect -> home
-            if (Entrust::can('user.create') == false) return redirect()->route('home');
-        }
+        if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('user.create'))) return redirect()->route('home');
+        Log::info('save new:', $request->all());
 
 		/*
 		 *  retrieve all the request form field values
@@ -113,8 +109,7 @@ class UserController extends Controller {
 		$user = $this->userRepository->create($request->all());
 
 		// to see our $user, we could Dump and Die here
-		// dd($user);
-
+        // dd(__METHOD__.'('.__LINE__.')',compact('request','user'));
 		return redirect()->route('user.show', ['id' => $user->objectID]);
 	}
 
@@ -122,11 +117,8 @@ class UserController extends Controller {
 	 * Retrieve an existing resource for edit
 	 */
 	public function edit($id) {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-            // if guest or cannot user.edit, redirect -> home
-            if (Entrust::can('user.edit') == false) return redirect()->route('home');
-        }
+        if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('user.edit'))) return redirect()->route('home');
+        Log::debug('edit: '.$id);
 
 		// using an implementation of the User Repository Interface
 		$user = $this->userRepository->find($id);
@@ -138,21 +130,46 @@ class UserController extends Controller {
 	 * Apply the updates to our resource
 	 */
 	public function update($id, UserRequest $request) {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-            // if guest or cannot user.edit, redirect -> home
-            if (Entrust::can('user.edit') == false) return redirect()->route('home');
-        }
+        if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('user.edit'))) return redirect()->route('home');
+        Log::info('update: '.$id, $request->all());
 
-		/*
-		 * Here we can apply any business logic required,
-		 * then change $request->all() to results.
-		 */
-		$input = $request->all();
-
-		$this->userRepository->update($id, $input);
+        //dd(__METHOD__.'('.__LINE__.')', compact('id','request'));
+		$this->userRepository->update($id, $request->all());
 
 		return redirect()->route('user.index');
 	}
+
+    /**
+     * Implement destroy($id)
+     */
+    public function destroy($id) {
+        if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('user.delete'))) return redirect()->route('home');
+        Log::info("delete: ".$id);
+        $user = $this->userRepository->find($id);
+        $deleted = false;
+
+        if(isset($user)) {
+            /*
+             * In the case of a User delete request
+             * 1. make sure there are no Roles for this User
+             * ok to delete
+             */
+            $roles = $this->roleUserRepository->filterOn(['user_id' => $id]);
+            Log::debug('Roles: '.(isset($roles) ? count($roles) : 'none' ));
+            if(isset($roles) and count($roles) > 0) {
+                $children = Lang::get('labels.titles.Role');
+                $model = Lang::get('labels.titles.User');
+                $errors = [[Lang::get('internal.errors.deleteHasChildren', ['Model' => $model, 'Children' => $children])]];
+                return redirect()->back()->withErrors($errors)->withInput();
+            }
+            //dd(__METHOD__."(".__LINE__.")",compact('id','user','roles'));
+
+            Log::debug(Auth::user()->name.' - delete: '.$id);
+            $deleted = $user->delete();
+        }
+
+        Log::info('deleted: '.($deleted ? 'yes' : 'no'));
+        return redirect()->route('user.index');
+    }
 
 }

@@ -35,11 +35,9 @@
         @lang('internal.role.allows', ['display_name' => $role->display_name, 'description' => $role->description])
     </div>
 
-    @include('errors.list')
-
     {{--
-        * Table Structure
-        * desc roles;
+    * Table Structure
+    * desc roles;
     +--------------+------------------+------+-----+---------------------+----------------+
     | Field        | Type             | Null | Key | Default             | Extra          |
     +--------------+------------------+------+-----+---------------------+----------------+
@@ -60,7 +58,19 @@
     @include('fields.textList', ['fieldName' => 'display_name', 'fieldValue' => $role->display_name ])
     @include('fields.textList', ['fieldName' => 'description' , 'fieldValue' => $role->description  ])
     @include('fields.textList', ['fieldName' => 'created_at'  , 'fieldValue' => $role->created_at   ])
-    @include('fields.textList', ['fieldName' => 'updated_at'  , 'fieldValue' => $role->updated_at   ])
+    @if($role->updated_at > '0000-00-00')
+        @include('fields.textList', ['fieldName' => 'updated_at', 'fieldValue' => $role->updated_at ])
+    @else
+        @include('fields.textList', ['fieldName' => 'updated_at', 'fieldValue' => '' ])
+    @endif
+
+    {!! Form::open(['class' => 'form-horizontal', 'url' => 'userRoles', 'method' => 'get']) !!}
+    <input name="name" type="hidden" value="">
+    <input name="role_id" type="hidden" value="{!! $role->id !!}">
+
+    @include('fields.button', [ 'submitButtonName' => 'UsersWithRole' ])
+
+    {!! Form::close() !!}
 
     <!-- stop of pages/role/show.blade.php, section('panel') -->
 @stop
@@ -70,7 +80,17 @@
 
     @if(isset($permissions) && count($permissions))
         <h3>{!! Lang::get('labels.titles.Permissions_for') !!} {!! $role->display_name !!}</h3>
+    @endif
 
+        <div class="pull-right">
+
+            @if(Entrust::can(['role.edit']))
+                <a href="{{URL::route('rolePermissions.edit',['id' => $role->id])}}" title="{{ Lang::get('labels.icons.editPermissions_for').' '.$role->display_name }}">{!! Html::image('img/edit.jpeg', Lang::get('labels.icons.edit'),array('height'=>'20','width'=>'20')) !!}</a>
+            @endif
+
+        </div>
+
+    @if(isset($permissions) && count($permissions))
         <!-- reuse pages.permissions.list -->
         @include('pages.permission.list', ['simpleList' => 'True'])
     @endif

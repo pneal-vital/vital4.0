@@ -57,7 +57,7 @@ $app->configureMonologUsing(function($monolog) {
     $handler = new Monolog\Handler\RotatingFileHandler(storage_path().'/logs/laravel.log', 0, Monolog\Logger::DEBUG);
     //$handler->setFormatter(new Monolog\Formatter\LineFormatter(
     $handler->setFormatter(new App\LineNormalizer(
-        "[%datetime%] %extra.process_id% %channel%.%level_name% %extra.class%::%extra.function%(%extra.line%): %message% %context%\n",
+        "[%datetime%] %extra.process_id% %channel%.%level_name% %extra.uName% %extra.class%::%extra.function%(%extra.line%): %message% %context%\n",
         null, true, true
     ));
     $handler->pushProcessor(new Monolog\Processor\ProcessIdProcessor());

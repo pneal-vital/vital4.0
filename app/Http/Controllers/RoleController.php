@@ -4,10 +4,10 @@ use App\Http\Requests\RoleRequest;
 use Illuminate\Support\Facades\View;
 use vital40\Repositories\PermissionRoleRepositoryInterface;
 use vital40\Repositories\RoleRepositoryInterface;
+use vital40\Repositories\RoleUserRepositoryInterface;
 use \Entrust;
 use \Lang;
 use \Log;
-use \Request;
 
 /**
  * Class RoleController
@@ -23,19 +23,19 @@ class RoleController extends Controller implements RoleControllerInterface {
 	 */ 
 	protected $permissionRoleRepository;
 	protected $roleRepository;
-	//protected $roleUserRepository;
+	protected $roleUserRepository;
 
 	/**
 	 * Constructor requires Role Repository
 	 */ 
 	public function __construct(
-        PermissionRoleRepositoryInterface $permissionRoleRepository,
-        RoleRepositoryInterface $roleRepository
-        //RoleUserRepositoryInterface $roleUserRepository
+          PermissionRoleRepositoryInterface $permissionRoleRepository
+        , RoleRepositoryInterface $roleRepository
+        , RoleUserRepositoryInterface $roleUserRepository
     ) {
 		$this->permissionRoleRepository = $permissionRoleRepository;
 		$this->roleRepository = $roleRepository;
-		//$this->roleUserRepository = $roleUserRepository;
+		$this->roleUserRepository = $roleUserRepository;
 	}
 
 	/**
@@ -44,7 +44,7 @@ class RoleController extends Controller implements RoleControllerInterface {
 	public function index() {
         // Entrust::hasRole('role-name');
         // Entrust::can('permission-name');
-        if(Entrust::hasRole(['support','admin']) == false) return redirect()->route('home');
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('role.view'))) return redirect()->route('home');
 
         $role = $this->getRequest('Role');
 
@@ -59,7 +59,7 @@ class RoleController extends Controller implements RoleControllerInterface {
 	 * Display a Filtered Listing of the resource.
 	 */
 	public function filter() {
-        if(Entrust::hasRole(['support','admin']) == false) return redirect()->route('home');
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('role.view'))) return redirect()->route('home');
 
         $role = $this->getRequest('Role');
 
@@ -74,7 +74,7 @@ class RoleController extends Controller implements RoleControllerInterface {
 	 * Display a specific resource
 	 */
 	public function show($id) {
-        if(Entrust::hasRole(['support','admin']) == false) return redirect()->route('home');
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('role.view'))) return redirect()->route('home');
 
 		// using an implementation of the Role Repository Interface
 		$role = $this->roleRepository->find($id);
@@ -84,8 +84,7 @@ class RoleController extends Controller implements RoleControllerInterface {
             $permissions[] = $rolePermission->permission;
         }
 
-		//dd(__METHOD__.'('.__LINE__.')',compact('role','rolePermissions','permissions'));
-
+		//dd(__METHOD__.'('.__LINE__.')',compact('id','role','rolePermissions','permissions'));
 		return view('pages.role.show', compact('role','permissions'));
 	}
 
@@ -93,11 +92,8 @@ class RoleController extends Controller implements RoleControllerInterface {
 	 * Create a new resource.
 	 */
 	public function create() {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-            // if guest or cannot role.create, redirect -> home
-            if (Entrust::can('role.create') == false) return redirect()->route('home');
-        }
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('role.create'))) return redirect()->route('home');
+		Log::debug('create');
 
 		return view('pages.role.create');
 	}
@@ -108,11 +104,8 @@ class RoleController extends Controller implements RoleControllerInterface {
 	 * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
 	 */
 	public function store(RoleRequest $request) {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-            // if guest or cannot role.create, redirect -> home
-            if (Entrust::can('role.create') == false) return redirect()->route('home');
-        }
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('role.create'))) return redirect()->route('home');
+		Log::info('save new:', $request->all());
 
 		/*
 		 *  retrieve all the request form field values
@@ -122,8 +115,7 @@ class RoleController extends Controller implements RoleControllerInterface {
 		$role = $this->roleRepository->create($request->all());
 
 		// to see our $role, we could Dump and Die here
-		//dd(__METHOD__.'('.__LINE__.')',compact('role'));
-
+		// dd(__METHOD__.'('.__LINE__.')',compact('request','role'));
 		return redirect()->route('role.show', ['id' => $role->objectID]);
 	}
 
@@ -131,11 +123,8 @@ class RoleController extends Controller implements RoleControllerInterface {
 	 * Retrieve an existing resource for edit
 	 */
 	public function edit($id) {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-            // if guest or cannot role.edit, redirect -> home
-            if (Entrust::can('role.edit') == false) return redirect()->route('home');
-        }
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('role.edit'))) return redirect()->route('home');
+		Log::debug('edit: '.$id);
 
 		// using an implementation of the Role Repository Interface
 		$role = $this->roleRepository->find($id);
@@ -147,11 +136,8 @@ class RoleController extends Controller implements RoleControllerInterface {
 	 * Apply the updates to our resource
 	 */
 	public function update($id, RoleRequest $request) {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-            // if guest or cannot role.edit, redirect -> home
-            if (Entrust::can('role.edit') == false) return redirect()->route('home');
-        }
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('role.edit'))) return redirect()->route('home');
+		Log::info('update: '.$id, $request->all());
 
 		/*
 		 * Here we can apply any business logic required,
@@ -209,13 +195,8 @@ class RoleController extends Controller implements RoleControllerInterface {
      * Implement destroy($id)
      */
     public function destroy($id) {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-            // if guest or cannot role.delete, redirect -> home
-            if (Entrust::can('role.delete') == false) return redirect()->route('home');
-        }
-
-        Log::debug('id:'.$id);
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('role.delete'))) return redirect()->route('home');
+		Log::info("delete: ".$id);
         $role = $this->roleRepository->find($id);
         $deleted = false;
 
@@ -232,23 +213,23 @@ class RoleController extends Controller implements RoleControllerInterface {
                 $children = Lang::get('labels.titles.Permission');
                 $model = Lang::get('labels.titles.Role');
                 $errors = [[Lang::get('internal.errors.deleteHasChildren', ['Model' => $model, 'Children' => $children])]];
-                return Redirect::back()->withErrors($errors)->withInput();
+                return redirect()->back()->withErrors($errors)->withInput();
             }
-            /*$users = $this->roleUserRepository->filterOn(['role_id' => $id]);
+            $users = $this->roleUserRepository->filterOn(['role_id' => $id]);
             Log::debug('Users: '.(isset($users) ? count($users) : 'none' ));
             if(isset($users) and count($users) > 0) {
-                $children = Lang::get('labels.titles.User');
+                $parent = Lang::get('labels.titles.User');
                 $model = Lang::get('labels.titles.Role');
-                $errors = [[Lang::get('internal.errors.deleteHasChildren', ['Model' => $model, 'Children' => $children])]];
-                return Redirect::back()->withErrors($errors)->withInput();
-            }*/
+                $errors = [[Lang::get('internal.errors.deleteHasParent', ['Model' => $model, 'Parent' => $parent])]];
+                return redirect()->back()->withErrors($errors)->withInput();
+            }
             //dd(__METHOD__."(".__LINE__.")",compact('id','role','permissions','users'));
 
             Log::debug('delete: '.$id);
             $deleted = $role->delete();
         }
 
-        Log::debug('deleted: '.($deleted ? 'yes' : 'no'));
+        Log::info('deleted: '.($deleted ? 'yes' : 'no'));
         return redirect()->route('role.index');
     }
 

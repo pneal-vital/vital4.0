@@ -4,12 +4,10 @@ use App\Http\Requests\PermissionRequest;
 use Illuminate\Support\Facades\View;
 use vital40\Repositories\PermissionRepositoryInterface;
 use vital40\Repositories\PermissionRoleRepositoryInterface;
-use \Auth;
 use \Entrust;
 use \Lang;
 use \Log;
 use \Redirect;
-use \Request;
 
 /**
  * Class PermissionController
@@ -30,8 +28,8 @@ class PermissionController extends Controller implements PermissionControllerInt
 	 * Constructor requires Permission Repository
 	 */ 
 	public function __construct(
-		PermissionRepositoryInterface $permissionRepository,
-		PermissionRoleRepositoryInterface $permissionRoleRepository
+		  PermissionRepositoryInterface $permissionRepository
+		, PermissionRoleRepositoryInterface $permissionRoleRepository
 	) {
 		$this->permissionRepository = $permissionRepository;
 		$this->permissionRoleRepository = $permissionRoleRepository;
@@ -43,7 +41,7 @@ class PermissionController extends Controller implements PermissionControllerInt
 	public function index() {
 		// Entrust::hasRole('role-name');
 		// Entrust::can('permission-name');
-		if(Entrust::hasRole(['support', 'admin']) == false) return redirect()->route('home');
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('permission.view'))) return redirect()->route('home');
 
 		$permission = $this->getRequest('Permission');
 
@@ -58,7 +56,7 @@ class PermissionController extends Controller implements PermissionControllerInt
 	 * Display a Filtered Listing of the resource.
 	 */
 	public function filter() {
-		if(Entrust::hasRole(['support', 'admin']) == false) return redirect()->route('home');
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('permission.view'))) return redirect()->route('home');
 
 		$permission = $this->getRequest('Permission');
 
@@ -73,12 +71,12 @@ class PermissionController extends Controller implements PermissionControllerInt
 	 * Display a specific resource
 	 */
 	public function show($id) {
-		if(Entrust::hasRole(['support', 'admin']) == false) return redirect()->route('home');
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('permission.view'))) return redirect()->route('home');
 
 		// using an implementation of the Permission Repository Interface
 		$permission = $this->permissionRepository->find($id);
-		//dd($permission);
 
+		//dd(__METHOD__.'('.__LINE__.')',compact('permission'));
 		return view('pages.permission.show', compact('permission'));
 	}
 
@@ -86,12 +84,8 @@ class PermissionController extends Controller implements PermissionControllerInt
 	 * Create a new resource.
 	 */
 	public function create() {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-            // if guest or cannot permission.create, redirect -> home
-            if (Entrust::can('permission.create') == false) return redirect()->route('home');
-        }
-        Log::debug('Auth::user(): '.Auth::user()->name);
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('permission.create'))) return redirect()->route('home');
+        Log::debug('create');
 
 		return view('pages.permission.create');
 	}
@@ -102,12 +96,8 @@ class PermissionController extends Controller implements PermissionControllerInt
 	 * @return \Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector
 	 */
 	public function store(PermissionRequest $request) {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-            // if guest or cannot permission.create, redirect -> home
-            if (Entrust::can('permission.create') == false) return redirect()->route('home');
-        }
-        Log::debug('Auth::user(): '.Auth::user()->name);
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('permission.create'))) return redirect()->route('home');
+        Log::info('save new:', $request->all());
 
 		/*
 		 *  retrieve all the request form field values
@@ -117,8 +107,7 @@ class PermissionController extends Controller implements PermissionControllerInt
 		$permission = $this->permissionRepository->create($request->all());
 
 		// to see our $permission, we could Dump and Die here
-		// dd($permission);
-
+		// dd(__METHOD__.'('.__LINE__.')',compact('permission'));
 		return redirect()->route('permission.show', ['id' => $permission->objectID]);
 	}
 
@@ -126,12 +115,8 @@ class PermissionController extends Controller implements PermissionControllerInt
 	 * Retrieve an existing resource for edit
 	 */
 	public function edit($id) {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-            // if guest or cannot permission.edit, redirect -> home
-            if (Entrust::can('permission.edit') == false) return redirect()->route('home');
-        }
-        Log::debug('Auth::user(): '.Auth::user()->name);
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('permission.edit'))) return redirect()->route('home');
+        Log::debug('edit: '.$id);
 
 		// using an implementation of the Permission Repository Interface
 		$permission = $this->permissionRepository->find($id);
@@ -143,12 +128,8 @@ class PermissionController extends Controller implements PermissionControllerInt
 	 * Apply the updates to our resource
 	 */
 	public function update($id, PermissionRequest $request) {
-        if(Entrust::hasRole('support') == false) {
-            if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-            // if guest or cannot permission.edit, redirect -> home
-            if (Entrust::can('permission.edit') == false) return redirect()->route('home');
-        }
-        Log::debug('Auth::user(): '.Auth::user()->name);
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('permission.edit'))) return redirect()->route('home');
+        Log::info('update: '.$id,$request->all());
 
 		/*
 		 * Here we can apply any business logic required,
@@ -206,14 +187,8 @@ class PermissionController extends Controller implements PermissionControllerInt
 	 * Implement destroy($id)
 	 */
 	public function destroy($id) {
-		if(Entrust::hasRole('support') == false) {
-			if (Entrust::hasRole('admin') == false) return redirect()->route('home');
-			// if guest or cannot permission.edit, redirect -> home
-			if (Entrust::can('permission.delete') == false) return redirect()->route('home');
-		}
-        Log::debug('Auth::user(): '.Auth::user()->name);
-
-		Log::debug("id: ".$id);
+		if(!(Entrust::hasRole(['support', 'admin']) || Entrust::can('permission.delete'))) return redirect()->route('home');
+		Log::info("delete: ".$id);
 		$permission = $this->permissionRepository->find($id);
 		$deleted = false;
 
@@ -224,7 +199,7 @@ class PermissionController extends Controller implements PermissionControllerInt
              * ok to delete
              */
 			$roles = $this->permissionRoleRepository->filterOn(['permission_id' => $id]);
-			Log::debug("Roles: ".(isset($roles) ? count($roles) : 'none' ));
+			Log::debug('Roles: '.(isset($roles) ? count($roles) : 'none' ));
 			if(isset($roles) and count($roles) > 0) {
 				$parent = Lang::get('labels.titles.Permission');
 				$model = Lang::get('labels.titles.Role');
@@ -233,11 +208,11 @@ class PermissionController extends Controller implements PermissionControllerInt
 			}
 			//dd(__METHOD__."(".__LINE__.")",compact('id','permission','roles'));
 
-			Log::debug("delete: ".$id);
+			Log::debug('delete: '.$id);
 			$deleted = $permission->delete();
 		}
 
-		Log::debug("deleted: ".($deleted ? 'yes' : 'no'));
+		Log::info('deleted: '.($deleted ? 'yes' : 'no'));
         return redirect()->route('permission.index');
 	}
 

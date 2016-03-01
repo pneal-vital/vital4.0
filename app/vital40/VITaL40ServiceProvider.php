@@ -48,6 +48,14 @@ class VITaL40ServiceProvider extends ServiceProvider {
             'vital40\Repositories\DBPerformanceTallyRepository'
         );
         $this->app->bind(
+            'vital40\Repositories\JobExperienceRepositoryInterface',
+            'vital40\Repositories\DBJobExperienceRepository'
+        );
+        $this->app->bind(
+            'vital40\Repositories\JobStatusRepositoryInterface',
+            'vital40\Repositories\DBJobStatusRepository'
+        );
+        $this->app->bind(
             'vital40\Repositories\PermissionRepositoryInterface',
             'vital40\Repositories\DBPermissionRepository'
         );
@@ -70,6 +78,10 @@ class VITaL40ServiceProvider extends ServiceProvider {
         $this->app->bind(
             'vital40\Repositories\RoleRepositoryInterface',
             'vital40\Repositories\DBRoleRepository'
+        );
+        $this->app->bind(
+            'vital40\Repositories\RoleUserRepositoryInterface',
+            'vital40\Repositories\DBRoleUserRepository'
         );
         $this->app->bind(
             'vital40\Repositories\SessionTypeRepositoryInterface',

@@ -13,6 +13,14 @@
 
     @lang('labels.titles.Permission_Filter')
 
+    <div class="pull-right">
+
+    @if(Entrust::can(['permission.create']))
+        <a href="{{URL::route('permission.create')}}" title="{{ Lang::get('labels.icons.create') }}">{!! Html::image('img/create.png', Lang::get('labels.icons.create'),array('height'=>'20','width'=>'20')) !!}</a>
+    @endif
+
+    </div>
+
     <!-- stop of pages/permission/index.blade.php, section('heading') -->
 @stop
 

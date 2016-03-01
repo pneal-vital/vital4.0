@@ -105,9 +105,9 @@ Entrust::routeNeedsRole('performanceTally/*/edit', 'manager', Redirect::to('home
 
 Route::resource('permission', 'PermissionController');
 Route::patch('permission', ['as' => 'permission.filter', 'uses' => 'PermissionController@filter']);
-Entrust::routeNeedsRole('permission*', ['teamLead','super','manager','support'], Redirect::to('home'), false);
-Entrust::routeNeedsRole('permission/create', 'manager', Redirect::to('home'));
-Entrust::routeNeedsRole('permission/*/edit', 'manager', Redirect::to('home'));
+Entrust::routeNeedsRole('permission*', ['support','admin','108'], Redirect::to('home'), false);
+Entrust::routeNeedsRole('permission/create', ['support','admin','109'], Redirect::to('home'), false);
+Entrust::routeNeedsRole('permission/*/edit', ['support','admin','110'], Redirect::to('home'), false);
 
 Route::get('po', ['as' => 'po.index', 'uses' => 'vital40\PurchaseOrderController@index']);
 Route::patch('po', ['as' => 'po.filter', 'uses' => 'vital40\PurchaseOrderController@filter']);
@@ -139,15 +139,15 @@ Entrust::routeNeedsRole('receiptHistory/*/edit', ['support'], Redirect::to('home
 
 Route::resource('role', 'RoleController');
 Route::patch('role', ['as' => 'role.filter', 'uses' => 'RoleController@filter']);
-Entrust::routeNeedsRole('role*', ['teamLead','super','manager','support'], Redirect::to('home'), false);
-Entrust::routeNeedsRole('role/create', 'manager', Redirect::to('home'));
-Entrust::routeNeedsRole('role/*/edit', 'manager', Redirect::to('home'));
+Entrust::routeNeedsRole('role*', ['support','admin','142'], Redirect::to('home'), false);
+Entrust::routeNeedsRole('role/create', ['support','admin','143'], Redirect::to('home'), false);
+Entrust::routeNeedsRole('role/*/edit', ['support','admin','144'], Redirect::to('home'), false);
 
 Route::resource('rolePermissions', 'RolePermissionsController');
 Route::patch('rolePermissions', ['as' => 'rolePermissions.filter', 'uses' => 'RolePermissionsController@filter']);
-Entrust::routeNeedsRole('rolePermissions*', ['teamLead','super','manager','support'], Redirect::to('home'), false);
-Entrust::routeNeedsRole('rolePermissions/create', 'manager', Redirect::to('home'));
-Entrust::routeNeedsRole('rolePermissions/*/edit', 'manager', Redirect::to('home'));
+Entrust::routeNeedsRole('rolePermissions*', ['support','admin','148'], Redirect::to('home'), false);
+Entrust::routeNeedsRole('rolePermissions/create', ['support','admin','149'], Redirect::to('home'), false);
+Entrust::routeNeedsRole('rolePermissions/*/edit', ['support','admin','150'], Redirect::to('home'), false);
 
 Route::resource('tote', 'ToteController');
 Route::patch('tote', ['as' => 'tote.filter', 'uses' => 'ToteController@filter']);
@@ -163,9 +163,9 @@ Entrust::routeNeedsRole('upc/*/edit', 'manager', Redirect::to('home'));
 
 Route::resource('user', 'UserController');
 Route::patch('user', ['as' => 'user.filter', 'uses' => 'UserController@filter']);
-//Entrust::routeNeedsRole('user*', ['teamLead','super','manager','support'], Redirect::to('home'), false);
-Entrust::routeNeedsRole('user/create', 'manager', Redirect::to('home'));
-Entrust::routeNeedsRole('user/*/edit', 'manager', Redirect::to('home'));
+Entrust::routeNeedsRole('user*', ['support','admin','166'], Redirect::to('home'), false);
+Entrust::routeNeedsRole('user/create', ['support','admin','167'], Redirect::to('home'), false);
+Entrust::routeNeedsRole('user/*/edit', ['support','admin','168'], Redirect::to('home'), false);
 
 Route::resource('userActivity', 'UserActivityController');
 Route::patch('userActivity', ['as' => 'userActivity.filter', 'uses' => 'UserActivityController@filter']);
@@ -176,6 +176,12 @@ Route::resource('userConversation', 'UserConversationController');
 Route::patch('userConversation', ['as' => 'userConversation.filter', 'uses' => 'UserConversationController@filter']);
 Entrust::routeNeedsRole('userConversation/create', ['support'], Redirect::to('home'), false);
 Entrust::routeNeedsRole('userConversation/*/edit', ['support'], Redirect::to('home'), false);
+
+Route::resource('userRoles', 'UserRolesController');
+Route::patch('userRoles', ['as' => 'userRoles.filter', 'uses' => 'UserRolesController@filter']);
+Entrust::routeNeedsRole('userRoles*', ['support','admin','182'], Redirect::to('home'), false);
+Entrust::routeNeedsRole('userRoles/create', ['support','admin','183'], Redirect::to('home'), false);
+Entrust::routeNeedsRole('userRoles/*/edit', ['support','admin','184'], Redirect::to('home'), false);
 
 //   Business UI
 // Quick Receive
@@ -224,5 +230,7 @@ Route::post('receiveArticle/texting', ['as' => 'receiveArticle.texting', 'uses' 
 // Rework Report
 Route::get('reworkReport', ['as' => 'reworkReport.index', 'uses' => 'ReworkReportController@index']);
 Route::patch('reworkReport', ['as' => 'reworkReport.filter', 'uses' => 'ReworkReportController@filter']);
+Route::get('reworkReport/review', ['as' => 'reworkReport.review', 'uses' => 'ReworkReportController@review']);
+Route::post('reworkReport/confirm', ['as' => 'reworkReport.confirm', 'uses' => 'ReworkReportController@confirm']);
 Route::patch('reworkReport/export', ['as' => 'reworkReport.export', 'uses' => 'ReworkReportController@export']);
 

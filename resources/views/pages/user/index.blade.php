@@ -13,6 +13,14 @@
 
     @lang('labels.titles.User_Filter')
 
+    <div class="pull-right">
+
+    @if(Entrust::can(['user.create']))
+        <a href="{{URL::route('user.create')}}" title="{{ Lang::get('labels.icons.create') }}">{!! Html::image('img/create.png', Lang::get('labels.icons.create'),array('height'=>'20','width'=>'20')) !!}</a>
+    @endif
+
+    </div>
+
     <!-- stop of pages/user/index.blade.php, section('heading') -->
 @stop
 

@@ -129,6 +129,7 @@ class Inventory extends Eloquent {
         $this->additional['Item_typeID'] = $value;
     }
     public function getOrderLineTypeAttribute() {
+        if(isset($this->additional['Order_Line_type']) == false) return null;
         return $this->additional['Order_Line_type'];
     }
     public function setOrderLineTypeAttribute($value) {

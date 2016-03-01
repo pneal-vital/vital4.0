@@ -73,7 +73,7 @@ class DBUserRepository implements UserRepositoryInterface {
 	public function update($id, $input) {
 		$user = User::find($id);
 
-		//dd($input);
+		//dd(__METHOD__.'('.__LINE__.')', compact('id','input','user'));
 		return $user->update($input);
 	}
 

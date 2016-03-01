@@ -60,7 +60,7 @@
             @else
                 <td>{{ $inv->Order_Line }}</td>
             @endif
-            <td>{{ $uoms[$inv->UOM] }}</td>
+            <td>{{ isset($inv->UOM) && isset($uoms[$inv->UOM]) ? $uoms[$inv->UOM] : $inv->UOM }}</td>
         </tr>
     @endforeach
 </table>

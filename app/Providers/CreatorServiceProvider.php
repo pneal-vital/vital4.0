@@ -69,6 +69,11 @@ class CreatorServiceProvider extends ServiceProvider {
             'pages.rolePermissions.index',
             'pages.rolePermissions.show',
             'pages.rolePermissions.update',
+            'pages.userRoles.create',
+            'pages.userRoles.edit',
+            'pages.userRoles.index',
+            'pages.userRoles.show',
+            'pages.userRoles.update',
         ], 'App\Http\ViewCreators\RoleCreator');
 
         /* UOMs */

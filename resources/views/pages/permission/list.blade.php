@@ -18,9 +18,11 @@
 
 <table class="table">
     <tr>
-        <th>{!! Lang::get('labels.id')           !!}</th>
+        @if(Entrust::hasRole(['support']))
+            <th>{!! Lang::get('labels.id')           !!}</th>
+        @endif
         @if(isset($simpleList) == false)
-            <th>{!! Lang::get('labels.hasThis')      !!}</th>
+            <th>{!! Lang::get('labels.rolesHaveThis') !!}</th>
         @endif
         <th>{!! Lang::get('labels.name')         !!}</th>
         <th>{!! Lang::get('labels.display_name') !!}</th>

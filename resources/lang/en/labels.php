@@ -63,7 +63,7 @@ return [
         'Rework_Report_Export'       => 'Rework Report Export',
         'Rework_Report_Filter'       => 'Rework Report Filter',
         'Role_Filter'                => 'Role Filter',
-        'RolePermission_Filter'      => 'Role Permissions Filter',
+        'RolePermission_Filter'      => 'Role Permission Filter',
         'RolesWithPermission'        => 'Roles with this Permission',
         'Select_Article'             => 'Select an Article Number',
         'Select_Cart'                => 'Select a Cart/Pallet',
@@ -93,9 +93,12 @@ return [
         'Update_User'                => 'Update a User',
         'Update_UserActivity'        => 'Update a User Activity',
         'Update_UserConversation'    => 'Update a User Conversation',
+        'Update_UserRoles'           => 'Update Roles for this User',
         'User_Filter'                => 'User Filter',
         'UserActivity_Filter'        => 'User Activity Filter',
         'UserConversation_Filter'    => 'User Conversation Filter',
+        'UserRole_Filter'            => 'User Role Filter',
+        'UsersWithRole'              => 'Users with this Role',
     ],
 
     /*
@@ -132,6 +135,7 @@ return [
     'Expected_Qty'       => 'Expected Qty',
     'ExportType'         => 'Export Type',
     'fromDate'           => 'From:',
+    'rolesHaveThis'      => '<abbr title="Roles that have this Permission">Have this</abbr>',
     'hasThis'            => 'Has this',
     'id'                 => 'ID',
     'Inventory'          => 'Inventory #',
@@ -196,6 +200,7 @@ return [
     'updated_at'         => 'Updated',
     'User_Name'          => 'User Name',
     'userName'           => 'User Name',
+    'usersHaveThis'      => '<abbr title="Users that have this Role">Have this</abbr>',
     'Variance'           => 'Variance',
     'Work_Table'         => 'Work Table',
     'x'                  => 'x coordinate',
@@ -225,6 +230,7 @@ return [
         'Description'        => 'Enter Description',
         'Description_2'      => 'Enter Description 2',
         'display_name'       => 'Enter Display Name',
+        'email'              => 'Enter Email',
         'Expected'           => 'Enter Expected',
         'Expected_Qty'       => 'Enter Expected Qty',
         'Invoice_Number'     => 'Enter Invoice Number',
@@ -341,10 +347,12 @@ return [
      * icons
      */
     'icons' => [
-        'create'             => 'Create',
-        'delete'             => 'Delete',
-        'edit'               => 'Edit',
-        'title'              => '<abbr title="Create, Edit, Delete icons">CED</abbr>',
+        'create'                     => 'Create',
+        'delete'                     => 'Delete',
+        'edit'                       => 'Edit',
+        'editPermissions_for'        => 'Edit Permission for: ',
+        'editRoles_for'              => 'Edit Roles for: ',
+        'title'                      => '<abbr title="Create, Edit, Delete icons">CED</abbr>',
     ],
 
     /*
@@ -405,6 +413,7 @@ return [
         'UserActivities'             => 'User Activities',
         'UserConversation'           => 'User Conversation',
         'UserConversations'          => 'User Conversations',
+        'UserRoles'                  => 'User Roles',
     ],
 
     /*
@@ -463,6 +472,7 @@ return [
         'Edit_User'                  => 'Edit a User',
         'Edit_UserActivity'          => 'Edit a User Activity',
         'Edit_UserConversation'      => 'Edit a User Conversation',
+        'Edit_UserRoles'             => 'Assign Roles to a User',
         'InboundOrder'               => 'Inbound Order',
         'InboundOrder_Filter'        => 'Inbound Order Filter',
         'InboundOrder_for'           => 'Inbound Order for: ',
@@ -534,6 +544,7 @@ return [
         'RolePermission'             => 'Role Permission',
         'RolePermission_Filter'      => 'Role Permission Filter',
         'Roles'                      => 'Roles',
+        'Roles_for'                  => 'Roles for: ',
         'Tote'                       => 'Tote',
         'Tote_Filter'                => 'Tote Filter',
         'Tote_for'                   => 'Tote for Carton ID: ',
@@ -548,6 +559,7 @@ return [
         'Update_ReceiptHistory'      => 'Update Receipt History',
         'Update_UserActivity'        => 'Update User Activity',
         'Update_UserConversation'    => 'Update User Conversation',
+        'User'                       => 'User',
         'User_Filter'                => 'User Filter',
         'Users'                      => 'Users',
         'User_for'                   => 'User for: ',
@@ -557,5 +569,7 @@ return [
         'UserConversation_Filter'    => 'User Conversation Filter',
         'UserConversations'          => 'User Conversations',
         'UserConversations_for'      => 'User Conversations for: ',
+        'UserRole'                   => 'User Role',
+        'UserRole_Filter'            => 'User Role Filter',
     ],
 ];

@@ -8,6 +8,7 @@
  */
 
 use Monolog\Formatter\LineFormatter;
+use \Auth;
 
 /**
  * Remove the extra __METHOD__.(.__LINE__.).': '
@@ -36,7 +37,8 @@ class LineNormalizer extends LineFormatter {
         if (isset($record['extra']) and isset($record['extra']['class']) and strlen($record['extra']['class']) > 40) {
             $record['extra']['class'] = '..'.substr($record['extra']['class'], strlen($record['extra']['class']) - 38);
         }
-
+        $record['extra']['uName'] = isset(Auth::user()->name) ? Auth::user()->name : 'n/a';
+        //dd(__METHOD__.'('.__LINE__.')',compact('record'));
         return parent::format($record);
     }
 }

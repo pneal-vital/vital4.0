@@ -17,7 +17,9 @@
                         @endif
                         @if(Entrust::hasRole(['admin', 'support']))
                             <li>Admin menu, improved Permissions and Roles screens with Create, Edit and Delete icons.</li>
-                            <li>Admin menu, new RolePermissions screens manage permissions related to roles.</li>
+                            <li>Admin menu, new RolePermissions screen to manage permissions related to roles.</li>
+                            <li>Admin menu, improved Users screen with Create, Edit and Delete icons.</li>
+                            <li>Admin menu, new UserRoles screen to manage roles related to users.</li>
                         @endif
                     </ul>
                     <p>Previous release features;

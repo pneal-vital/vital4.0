@@ -19,11 +19,14 @@
 
 <table class="table">
     <tr>
-        <th>{!! Lang::get('labels.id')         !!}</th>
+        @if(Entrust::hasRole(['support']))
+            <th>{!! Lang::get('labels.id')         !!}</th>
+        @endif
         <th>{!! Lang::get('labels.name')       !!}</th>
         <th>{!! Lang::get('labels.email')      !!}</th>
         <th>{!! Lang::get('labels.created_at') !!}</th>
         <th>{!! Lang::get('labels.updated_at') !!}</th>
+        @include('fields.cedIcons', ['model' => 'user', 'elemType' => 'th'])
     </tr>
 
     @foreach($users as $usr)
@@ -39,11 +42,14 @@
             @else
                 <td> </td>
             @endif
+            @include('fields.cedIcons', ['model' => 'user', 'elemType' => 'td', 'id' => $usr->id])
         </tr>
     @endforeach
 </table>
 
 {!! isset($user) ? $users->appends($user)->render() : $users->render() !!}
+
+@include('fields.cedIcons', ['model' => 'role', 'elemType' => 'script'])
 
 <!-- End of pages/user/list.blade.php -->
 

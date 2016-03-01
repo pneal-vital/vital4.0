@@ -18,13 +18,20 @@
 
 <table class="table">
     <tr>
-        <th>{!! Lang::get('labels.id')           !!}</th>
+        @if(Entrust::hasRole(['support']))
+            <th>{!! Lang::get('labels.id')           !!}</th>
+        @endif
+        @if(isset($simpleList) == false)
+            <th>{!! Lang::get('labels.usersHaveThis') !!}</th>
+        @endif
         <th>{!! Lang::get('labels.name')         !!}</th>
         <th>{!! Lang::get('labels.display_name') !!}</th>
         <th>{!! Lang::get('labels.description')  !!}</th>
-        <th>{!! Lang::get('labels.created_at')   !!}</th>
-        <th>{!! Lang::get('labels.updated_at')   !!}</th>
-        @include('fields.cedIcons', ['model' => 'role', 'elemType' => 'th'])
+        @if(isset($simpleList) == false)
+            <th>{!! Lang::get('labels.created_at')   !!}</th>
+            <th>{!! Lang::get('labels.updated_at')   !!}</th>
+            @include('fields.cedIcons', ['model' => 'role', 'elemType' => 'th'])
+        @endif
     </tr>
 
     @foreach($roles as $r)
@@ -32,19 +39,26 @@
             @if(Entrust::hasRole(['support']))
                 <td>{!! link_to_route('role.show', $r->id, ['id' => $r->id]) !!}</td>
             @endif
+            @if(isset($simpleList) == false)
+                <td>{!! link_to_route('userRoles.index', 'Users', ['name' => '', 'role_id' => $r->id]) !!}</td>
+            @endif
             <td>{!! link_to_route('role.show', $r->name, ['id' => $r->id]) !!}</td>
             <td>{{ $r->display_name }}</td>
             <td>{{ $r->description  }}</td>
-            <td>{{ $r->created_at   }}</td>
-            <td>{{ $r->updated_at   }}</td>
-            @include('fields.cedIcons', ['model' => 'role', 'elemType' => 'td', 'id' => $r->id])
+            @if(isset($simpleList) == false)
+                <td>{{ $r->created_at   }}</td>
+                <td>{{ $r->updated_at   }}</td>
+                @include('fields.cedIcons', ['model' => 'role', 'elemType' => 'td', 'id' => $r->id])
+            @endif
         </tr>
     @endforeach
 </table>
 
-{!! isset($role) ? $roles->appends($role)->render() : $roles->render() !!}
+@if(isset($simpleList) == false)
+    {!! isset($role) ? $roles->appends($role)->render() : $roles->render() !!}
 
-@include('fields.cedIcons', ['model' => 'role', 'elemType' => 'script'])
+    @include('fields.cedIcons', ['model' => 'role', 'elemType' => 'script'])
+@endif
 
 <!-- End of pages/role/list.blade.php -->
 
