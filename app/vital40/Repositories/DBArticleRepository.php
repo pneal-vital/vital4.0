@@ -93,7 +93,7 @@ class DBArticleRepository implements ArticleRepositoryInterface {
             $query->where('Item.objectID', '=', $filter['objectID']);
         }
 		if(isset($filter['Sku_Number']) && strlen($filter['Sku_Number']) > 3) {
-			$query->where('Item.Sku_Number', 'like', $filter['Sku_Number'] . '%');
+			$query->where('Item.Sku_Number', 'like', trim($filter['Sku_Number']) . '%');
 		}
 		if(isset($filter['Client_Code']) && strlen($filter['Client_Code']) > 3) {
 			$query->where('Item.Client_Code', $filter['Client_Code']);

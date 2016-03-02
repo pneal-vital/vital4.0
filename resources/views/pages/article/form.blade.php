@@ -41,8 +41,8 @@
 @include('fields.textEntry', ['fieldName' => 'Master_Pack_Weight' ])
 @include('fields.textEntry', ['fieldName' => 'opening'            ])
 @include('fields.textEntry', ['fieldName' => 'replen'             ])
-@include('fields.ddList'   , ['fieldName' => 'rework', 'lists' => array_merge(Lang::get('lists.article.rework'),['' => Lang::get('labels.filter.rework')]) ])
-@include('fields.ddList'   , ['fieldName' => 'split' , 'lists' => array_merge(Lang::get('lists.article.split') ,['' => Lang::get('labels.filter.split' )]) ])
+@include('fields.ddList'   , ['fieldName' => 'rework', 'lists' => array_merge(['' => Lang::get('labels.enter.rework')], Lang::get('lists.article.rework')) ])
+@include('fields.ddList'   , ['fieldName' => 'split' , 'lists' => array_merge(['' => Lang::get('labels.enter.split' )], Lang::get('lists.article.split'), ['' => Lang::get('labels.enter.split' )]) ])
 
 @include('fields.button')
 

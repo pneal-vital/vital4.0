@@ -77,7 +77,7 @@
         </div>
     @else
         {{-- _include('fields.textEntryButton', ['fieldName' => 'Rework']) --}}
-        @include('fields.ddList', ['fieldName' => 'Rework', 'lists' => $reworks, 'labelSize' => 'col-sm-2', 'fieldSize' => 'col-sm-5', 'onChangeSubmit' => 'true' ])
+        @include('fields.ddList', ['fieldName' => 'Rework', 'lists' => array_merge(['' => Lang::get('labels.enter.rework')], $reworks), 'labelSize' => 'col-sm-2', 'fieldSize' => 'col-sm-5', 'onChangeSubmit' => 'true' ])
     @endif
 </div>
 
