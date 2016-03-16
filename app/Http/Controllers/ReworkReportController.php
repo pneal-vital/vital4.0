@@ -1,8 +1,10 @@
 <?php namespace App\Http\Controllers;
 
+use App\Jobs\ReworkReportInterface;
 use Carbon\Carbon;
 use vital3\Repositories\CountersRepositoryInterface;
 use vital40\Repositories\ArticleRepositoryInterface;
+use vital40\Repositories\JobExperienceRepositoryInterface;
 use vital40\Repositories\PurchaseOrderDetailRepositoryInterface;
 use vital40\Repositories\ReceiptHistoryRepositoryInterface;
 use vital40\Repositories\UPCRepositoryInterface;
@@ -19,17 +21,18 @@ use \Session;
  * Class ReworkReportController
  * @package App\Http\Controllers
  */
-class ReworkReportController extends Controller {
+class ReworkReportController extends Controller implements ReworkReportControllerInterface {
 
-	/**
-	 * Reference an implementation of the Repository Interface
-	 * @var vital3\Repositories\PerformanceTallyRepositoryInterface
-	 */ 
-	protected $countersRepository;
-	protected $articleRepository;
+    /**
+     * Reference an implementation of the Repository Interface
+     */
+    protected $articleRepository;
+    protected $countersRepository;
+    protected $jobExperienceRepository;
     protected $purchaseOrderDetailRepository;
     protected $receiptHistoryRepository;
     protected $upcRepository;
+    protected $jobStatusController;
 
 
     /**
@@ -38,15 +41,19 @@ class ReworkReportController extends Controller {
 	public function __construct(
           CountersRepositoryInterface $countersRepository
         , ArticleRepositoryInterface $articleRepository
+        , JobExperienceRepositoryInterface $jobExperienceRepository
         , PurchaseOrderDetailRepositoryInterface $purchaseOrderDetailRepository
 	    , ReceiptHistoryRepositoryInterface $receiptHistoryRepository
 	    , UPCRepositoryInterface $upcRepository
+	    , JobStatusControllerInterface $jobStatusController
     ) {
 		$this->countersRepository = $countersRepository;
 		$this->articleRepository = $articleRepository;
+		$this->jobExperienceRepository = $jobExperienceRepository;
         $this->purchaseOrderDetailRepository = $purchaseOrderDetailRepository;
         $this->receiptHistoryRepository = $receiptHistoryRepository;
         $this->upcRepository = $upcRepository;
+        $this->jobStatusController = $jobStatusController;
 	}
 
 
@@ -54,7 +61,7 @@ class ReworkReportController extends Controller {
 	 * Display a Listing of the resource.
 	 */
 	public function index() {
-        if(Entrust::hasRole('teamLead') == False) return redirect()->route('home');
+        if(Entrust::can('report.rework') == False) return redirect()->route('home');
 
         $reworkReport = Request::all();
         //dd(__METHOD__."(".__LINE__.")",compact('reworkReport'));
@@ -71,7 +78,7 @@ class ReworkReportController extends Controller {
         if(isset($reworkReport['fromDate'])) Session::put('fromDate', $reworkReport['fromDate']);
         if(isset($reworkReport['toDate'  ])) Session::put('toDate'  , $reworkReport['toDate'  ]);
 
-        //dd(__METHOD__."(".__LINE__.")",compact('reworkReport','reworkReports'));
+        //dd(__METHOD__."(".__LINE__.")",compact('reworkReport','reworkReports','jobID'));
         // Using the view(..) helper function
 		return view('pages.reworkReport.index', compact('reworkReport', 'reworkReports'));
 	}
@@ -80,7 +87,7 @@ class ReworkReportController extends Controller {
 	 * Display a Filtered Listing of the resource.
 	 */
 	public function filter() {
-        if(Entrust::hasRole('teamLead') == False) return redirect()->route('home');
+        if(Entrust::can('report.rework') == False) return redirect()->route('home');
 
         $reworkReport = Request::all();
         // restore fromDate & toDate
@@ -88,6 +95,8 @@ class ReworkReportController extends Controller {
             $reworkReport['fromDate'] = Session::get('fromDate');
         if(isset($reworkReport['toDate'  ]) == false and Session::has('toDate'  ))
             $reworkReport['toDate'  ] = Session::get('toDate'  );
+        if(isset($reworkReport['email'   ]) == false)
+            $reworkReport['email'   ] = Auth::user()->email;
 
         $reworkReports = $this->CalculateReport($reworkReport['fromDate'], $reworkReport['toDate']);
 
@@ -95,7 +104,8 @@ class ReworkReportController extends Controller {
         if(isset($reworkReport['fromDate'])) Session::put('fromDate', $reworkReport['fromDate']);
         if(isset($reworkReport['toDate'  ])) Session::put('toDate'  , $reworkReport['toDate'  ]);
 
-        //dd(__METHOD__."(".__LINE__.")",compact('reworkReport','reworkReports'));
+        //$sessionAll = Session::all();
+        //dd(__METHOD__."(".__LINE__.")",compact('reworkReport','reworkReports','sessionAll'));
         // Using the view(..) helper function
         return view('pages.reworkReport.index', compact('reworkReport', 'reworkReports'));
 	}
@@ -106,7 +116,7 @@ class ReworkReportController extends Controller {
      * See: ViewCreators/ExportTypeCreator for a list of the exportTypes we need to support.
 	 */
 	public function export() {
-        if(Entrust::hasRole('teamLead') == False) return redirect()->route('home');
+        if(Entrust::can('report.rework') == False) return redirect()->route('home');
 
         $reworkReport = Request::all();
         // restore fromDate & toDate
@@ -114,9 +124,41 @@ class ReworkReportController extends Controller {
             $reworkReport['fromDate'] = Session::get('fromDate');
         if(isset($reworkReport['toDate'  ]) == false and Session::has('toDate'  ))
             $reworkReport['toDate'  ] = Session::get('toDate'  );
-        //dd(__METHOD__."(".__LINE__.")",compact('reworkReport'));
 
-        if($reworkReport['ExportType'] == 'xls') {
+        /*
+         * We have been asked to export the report
+         *
+         * 1. Initiate job ReworkReport
+         * 2. Calculate the expected elapsed time (minutes) to run this report
+         * 1f more then 2 minutes, ask if they want the results emailed to them, provide email id: ___
+         * 3.1. yes -> return ReworkReport job created/started/expect results in about n minutes
+         * 3.2. no -> check if ReworkReport job started, wait n minutes, check again ???
+         *            if not started, run report from here and export the results
+         */
+
+        // 1. Initiate job ReworkReport
+        $jobParams = ['fromDate' => $reworkReport['fromDate'], 'toDate' => $reworkReport['toDate'], 'forUser' => Auth::user()->name];
+        if(isset($reworkReport['toDate']) && $reworkReport['toDate'] != 0)
+            $jobParams['exportType'] = $reworkReport['ExportType'];
+        $jobID = $this->jobStatusController->dispatchJob('App\Jobs\ReworkReport',$jobParams);
+        Session::put('jobID', serialize($jobID));
+        $reworkReport['status'] = 'submitted';
+        //dd(__METHOD__."(".__LINE__.")",compact('reworkReport','sessionAll','jobParams','jobID'));
+
+        // 2. Calculate the expected elapsed time (minutes) to run this report
+        $itemCount = $this->receiptHistoryRepository->countOn($reworkReport);
+        $elapsedTime = $this->jobExperienceRepository->elapsedTime($itemCount, ['name' => 'App\\Jobs\\ReworkReport']);
+        if($elapsedTime > 2) {
+            $expectedCompletion = Carbon::now()->addMinutes($elapsedTime);
+            $reworkReport['itemCount'] = $itemCount;
+            $reworkReport['elapsedTime'] = $elapsedTime;
+            $reworkReport['expectedCompletion'] = $expectedCompletion;
+            $reworkReport['email'] = Auth::user()->email;
+            //$sessionAll = Session::all();
+            //dd(__METHOD__."(".__LINE__.")",compact('reworkReport','jobParams','jobID','itemCount','elapsedTime','expectedCompletion','sessionAll'));
+        }
+
+        elseif($reworkReport['ExportType'] == 'xls') {
             $reworkReports = $this->CalculateReport($reworkReport['fromDate'], $reworkReport['toDate'],0);
             //dd(__METHOD__."(".__LINE__.")",compact('reworkReport','reworkReports'));
 
@@ -138,7 +180,7 @@ class ReworkReportController extends Controller {
             })->export('xls');
         }
 
-        if($reworkReport['ExportType'] == 'csv') {
+        elseif($reworkReport['ExportType'] == 'csv') {
             $reworkReports = $this->CalculateReport($reworkReport['fromDate'], $reworkReport['toDate'],0);
             //dd(__METHOD__."(".__LINE__.")",compact('reworkReport','reworkReports'));
 
@@ -167,6 +209,8 @@ class ReworkReportController extends Controller {
         if(isset($reworkReport['toDate'  ])) Session::put('toDate'  , $reworkReport['toDate'  ]);
 
         // Using the view(..) helper function
+        //$sessionAll = Session::all();
+        //dd(__METHOD__."(".__LINE__.")",compact('reworkReport','reworkReports','sessionAll'));
         return view('pages.reworkReport.index', compact('reworkReport', 'reworkReports'));
     }
 

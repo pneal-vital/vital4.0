@@ -8,7 +8,13 @@
                 <div class="panel-heading">News</div>
 
                 <div class="panel-body">
-                    Watch here for application news!
+                    @if (session('status'))
+                        <div class="alert alert-success">
+                            {{ session('status') }}
+                        </div>
+                    @endif
+
+                    <p><b>Watch here for application news!</b>
                     <p>This release contains these new features;
                     <ul>
                         <li>Quick Receive, Improved scan UPC/tote transaction process</li>
@@ -20,6 +26,9 @@
                             <li>Admin menu, new RolePermissions screen to manage permissions related to roles.</li>
                             <li>Admin menu, improved Users screen with Create, Edit and Delete icons.</li>
                             <li>Admin menu, new UserRoles screen to manage roles related to users.</li>
+                        @endif
+                        @if(Entrust::hasRole(['teamLead', 'super', 'manager', 'support']))
+                            <li>"Forget Your Password?" on Login page will email to you a link that can change your password.</li>
                         @endif
                     </ul>
                     <p>Previous release features;

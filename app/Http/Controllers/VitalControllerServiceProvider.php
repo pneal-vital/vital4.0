@@ -17,6 +17,10 @@ class VitalControllerServiceProvider extends ServiceProvider {
 			'App\Http\Controllers\ClientController'
 		);
 		$this->app->bind(
+			'App\Http\Controllers\JobStatusControllerInterface',
+			'App\Http\Controllers\JobStatusController'
+		);
+		$this->app->bind(
 			'App\Http\Controllers\LocationControllerInterface',
 			'App\Http\Controllers\LocationController'
 		);
@@ -31,6 +35,10 @@ class VitalControllerServiceProvider extends ServiceProvider {
 		$this->app->bind(
 			'App\Http\Controllers\Receive\ReceivePOControllerInterface',
 			'App\Http\Controllers\Receive\ReceivePOController'
+		);
+		$this->app->bind(
+			'App\Http\Controllers\ReworkReportControllerInterface',
+			'App\Http\Controllers\ReworkReportController'
 		);
 		$this->app->bind(
 			'App\Http\Controllers\RoleControllerInterface',

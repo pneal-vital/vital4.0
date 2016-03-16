@@ -56,6 +56,7 @@ return [
         'PurchaseOrder_Filter'       => 'Purchase Order Filter',
         'PurchaseOrderDetail_Filter' => 'Purchase Order Detail Filter',
         'ReceiptHistory_Filter'      => 'Receipt History Filter',
+        'Receive_Email'              => 'Receive email',
         'Receive_Location_Filter'    => 'Receive Location Filter',
         'Receive_PO_Filter'          => 'Receive PO Filter',
         'Receive_UPC'                => 'Receive UPC',
@@ -99,6 +100,7 @@ return [
         'UserConversation_Filter'    => 'User Conversation Filter',
         'UserRole_Filter'            => 'User Role Filter',
         'UsersWithRole'              => 'Users with this Role',
+        'Wait'                       => 'Wait',
     ],
 
     /*
@@ -363,6 +365,7 @@ return [
         'Article'                    => 'Article',
         'Articles'                   => 'Articles',
         'AssociateNumbers'           => 'Associate Numbers',
+        'ChangePassword'             => 'Change my password',
         'Home'                       => 'Home',
         'InboundOrder'               => 'Inbound Order',
         'InboundOrders'              => 'Inbound Orders',
@@ -377,6 +380,7 @@ return [
         'Locations'                  => 'Locations',
         'Login'                      => 'Login',
         'Logout'                     => 'Logout',
+        'iLogout'                    => '<span class="glyphicon glyphicon-log-out"></span>&nbsp; Logout',
         'MyActivities'               => 'My Activities',
         'MyNumbers'                  => 'My Numbers',
         'New'                        => 'New',
@@ -414,6 +418,13 @@ return [
         'UserConversation'           => 'User Conversation',
         'UserConversations'          => 'User Conversations',
         'UserRoles'                  => 'User Roles',
+    ],
+
+    /*
+     * status
+     */
+    'status' => [
+        'ChangePassword'             => 'Change your Password ...',
     ],
 
     /*
@@ -538,6 +549,9 @@ return [
         'Receive_PO_Filter'          => 'Receive PO Filter',
         'Rework_Report'              => 'Rework Report',
         'Rework_Report_Filter'       => 'Rework Report Filter',
+        'Rework_Report_Submitted'    => 'Rework Report Submitted',
+        'Rework_Report_Started'      => 'Rework Report Started',
+        'Rework_Report_Completed'    => 'Rework Report Completed',
         'Role'                       => 'Role',
         'Role_Filter'                => 'Role Filter',
         'Role_for'                   => 'Role for: ',

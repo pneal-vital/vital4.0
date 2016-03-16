@@ -3,7 +3,9 @@
 use App\User;
 use Validator;
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Passwords\TokenRepositoryInterface;
 use Illuminate\Foundation\Auth\AuthenticatesAndRegistersUsers;
+use \Lang;
 
 class AuthController extends Controller
 {
@@ -24,14 +26,21 @@ class AuthController extends Controller
     //protected $loginPath = '/auth/login';
     protected $username = 'name';
 
+    // (from: vendor/laravel/framework/src/Illuminate/Auth/Passwords/PasswordBroker.php)
+    // Once we have the reset token, we are ready to send the message out to this
+    // user with a link to reset their password. We will then redirect back to
+    // the current URI having nothing set in the session to indicate errors.
+    protected $tokens;
+
     /**
      * Create a new authentication controller instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(TokenRepositoryInterface $tokens)
     {
-        $this->middleware('guest', ['except' => 'getLogout']);
+        $this->tokens = $tokens;
+        $this->middleware('guest', ['except' => ['getLogout','changePassword']]);
     }
 
     /**
@@ -62,5 +71,19 @@ class AuthController extends Controller
             'email' => $data['email'],
             'password' => bcrypt($data['password']),
         ]);
+    }
+
+    /**
+     * Create a new user instance after a valid registration.
+     *
+     * @param  array  $data
+     * @return User
+     */
+    public function changePassword()
+    {
+        $token = $this->tokens->create(\Auth::user());
+        $this->getLogout();
+        return redirect('/password/reset/'.$token)
+            ->with('status', Lang::get('labels.status.ChangePassword'));
     }
 }

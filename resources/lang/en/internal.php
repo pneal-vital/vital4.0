@@ -56,6 +56,8 @@ return [
             'notValidLocation' => ':Work_Table is not a unique location, click Select a Work Table',
         ],
 
+        'notAuthorized'        => 'Not authorized to :action a :object of :id',
+
         'pallet' => [
             'notFound'         => 'Error: Scanned Cart :palletID is not found - Scan a Cart Label',
         ],

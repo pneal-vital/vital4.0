@@ -122,11 +122,18 @@
                 @endif
                 <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#"><span class="glyphicon glyphicon-user"></span>&nbsp; {{ \Auth::user()->name }}</a>
                     <ul class="dropdown-menu">
-                        <li>{!! link_to_route('userActivity.index', Lang::get('labels.navbar.MyActivities')) !!}</li>
+                        @if(Entrust::can(['userActivity.view', 'myActivity.view']))
+                            <li>{!! link_to_route('userActivity.index', Lang::get('labels.navbar.MyActivities')) !!}</li>
+                        @endif
                         @if(Entrust::can(['associateNumber.view', 'myNumber.view']))
                             <li>{!! link_to_route('associateNumber.show', Lang::get('labels.navbar.MyNumbers'),
                                 ['userName' => Auth::user()->name, 'fromDate' => ($carbon::now()->subHours(10)->toDateTimeString()), 'toDate' => ($carbon::now()->toDateTimeString())]) !!}</li>
                         @endif
+                        <li>{!! link_to_route('auth.changePassword', Lang::get('labels.navbar.ChangePassword')) !!}</li>
+                            {{-- not sure why this next line does not work, compare this with
+                                 resources/views/pages/performanceTally/list.blade.php:        <th>{!! Lang::get('labels.putAwayRec')     !!}</th>
+                        <li>{!! link_to_route('auth.logout', Lang::get('labels.navbar.iLogout')) !!}</li>
+                             --}}
                         <li><a href="/auth/logout"><span class="glyphicon glyphicon-log-out"></span>&nbsp; @lang('labels.navbar.Logout')</a></li>
                     </ul>
                 </li>

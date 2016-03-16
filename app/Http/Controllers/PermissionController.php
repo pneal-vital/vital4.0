@@ -17,10 +17,7 @@ class PermissionController extends Controller implements PermissionControllerInt
 
 	use SaveRequest;
 
-	/**
-	 * Reference an implementation of the Repository Interface
-	 * @var vital40\Repositories\PermissionRepositoryInterface
-	 */ 
+	// Reference an implementation of the Repository Interface
 	protected $permissionRepository;
 	protected $permissionRoleRepository;
 
@@ -147,7 +144,7 @@ class PermissionController extends Controller implements PermissionControllerInt
 	 */
 	public function lists($columnName) {
 
-		// using an implementation of the UOM Repository Interface
+		// using an implementation of the Permission Repository Interface
 		$permissions = $this->permissionRepository->lists(100);
 
 		// pull out the requested columnName
@@ -169,7 +166,7 @@ class PermissionController extends Controller implements PermissionControllerInt
 	 */
 	public function translate($columnName) {
 
-		// using an implementation of the UOM Repository Interface
+		// using an implementation of the Permission Repository Interface
 		$permissions = $this->permissionRepository->lists(0);
 
 		// pull out the requested columnName
@@ -178,6 +175,7 @@ class PermissionController extends Controller implements PermissionControllerInt
 			$result[ $permission['id'] ] = $permission[$columnName];
 		}
 		//dd(__METHOD__.'('.__LINE__.')',compact('result'));
+		asort($result);
 
 		// return an array of results
 		return $result;

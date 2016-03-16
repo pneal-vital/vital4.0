@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\View;
 use vital40\Repositories\PermissionRoleRepositoryInterface;
 use vital40\Repositories\RoleRepositoryInterface;
 use vital40\Repositories\RoleUserRepositoryInterface;
+use \Auth;
 use \Entrust;
 use \Lang;
 use \Log;
@@ -17,10 +18,7 @@ class RoleController extends Controller implements RoleControllerInterface {
 
     use SaveRequest;
 
-	/**
-	 * Reference an implementation of the Repository Interface
-	 * @var vital40\Repositories\RoleRepositoryInterface
-	 */ 
+	// Reference an implementation of the Repository Interface
 	protected $permissionRoleRepository;
 	protected $roleRepository;
 	protected $roleUserRepository;
@@ -63,9 +61,13 @@ class RoleController extends Controller implements RoleControllerInterface {
 
         $role = $this->getRequest('Role');
 
-		// using an implementation of the Role Repository Interface
+        //$restricted_roles = $this->roleRepository->filterOn(['name' => 'work']);
+        //$translated_roles = $this->translate('display_name');
+
+        // using an implementation of the Role Repository Interface
 		$roles = $this->roleRepository->paginate($role);
 
+        //dd(__METHOD__.'('.__LINE__.')',compact('role','roles','translated_roles','restricted_roles'));
 		// populate a View
 		return View::make('pages.role.index', compact('role', 'roles'));
 	}
@@ -155,7 +157,7 @@ class RoleController extends Controller implements RoleControllerInterface {
 	 */
 	public function lists($columnName) {
 
-		// using an implementation of the UOM Repository Interface
+		// using an implementation of the Role Repository Interface
 		$roles = $this->roleRepository->lists(100);
 
 		// pull out the requested columnName
@@ -177,14 +179,15 @@ class RoleController extends Controller implements RoleControllerInterface {
 	 */
 	public function translate($columnName) {
 
-		// using an implementation of the UOM Repository Interface
+		// using an implementation of the Role Repository Interface
 		$roles = $this->roleRepository->lists(0);
 
 		// pull out the requested columnName
 		$result = array();
 		foreach($roles as $role) {
-			$result[ $role['id'] ] = $role[$columnName];
+            $result[$role['id']] = $role[$columnName];
 		}
+        asort($result);
         //dd(__METHOD__.'('.__LINE__.')',compact('result'));
 
 		// return an array of results
@@ -217,7 +220,10 @@ class RoleController extends Controller implements RoleControllerInterface {
             }
             $users = $this->roleUserRepository->filterOn(['role_id' => $id]);
             Log::debug('Users: '.(isset($users) ? count($users) : 'none' ));
-            if(isset($users) and count($users) > 0) {
+            if(isset($users) and count($users) == 1 and $users[0]['user_id'] == Auth::user()->id) {
+                $users[0]->delete();
+            }
+            elseif(isset($users) and count($users) > 0) {
                 $parent = Lang::get('labels.titles.User');
                 $model = Lang::get('labels.titles.Role');
                 $errors = [[Lang::get('internal.errors.deleteHasParent', ['Model' => $model, 'Parent' => $parent])]];

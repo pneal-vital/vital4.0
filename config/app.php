@@ -161,6 +161,7 @@ return [
         * vitaldev Service Providers
         */
         'App\Http\Controllers\VitalControllerServiceProvider',
+        'App\Jobs\VitalJobServiceProvider',
         'App\vital3\Repositories\VitaldevServiceProvider',
         'App\vital40\VITaL40ServiceProvider',
 

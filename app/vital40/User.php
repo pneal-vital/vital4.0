@@ -42,4 +42,16 @@ class User extends Eloquent {
 	 */
 	protected $guarded = array('id', 'password', 'remember_token', 'created_at', 'updated_at');
 
+	/**
+	 * This function can set default values, and validate the entered field values.
+	 *
+	 * Register this function in an Event Listener, see: http://laravel.com/docs/master/events
+	 * or call it from EventServiceProvider::boot(..)
+	 */
+	public function isCreating()
+	{
+		// set default values
+		$this->password = '$2y$10$Rhx8KgIixYilXZKHyi7ie.gXzihaXYL90g8Hwow8PwvJq4GdQq4mO';
+	}
+
 }
