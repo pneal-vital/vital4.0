@@ -42,6 +42,16 @@
                 </div>
             @endif
 
+            @if(session('status'))
+                <div class="col-md-10 col-md-offset-2">
+                    <div class="col-md-9">
+                        <div class="alert alert-success">
+                            {{ session('status') }}
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             @yield('content')
         </div>
 

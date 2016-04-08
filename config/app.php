@@ -162,6 +162,7 @@ return [
         */
         'App\Http\Controllers\VitalControllerServiceProvider',
         'App\Jobs\VitalJobServiceProvider',
+        'App\Reports\ReportServiceProvider',
         'App\vital3\Repositories\VitaldevServiceProvider',
         'App\vital40\VITaL40ServiceProvider',
 

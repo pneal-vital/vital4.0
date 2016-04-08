@@ -243,7 +243,7 @@ Route::post('receiveArticle/texting', ['as' => 'receiveArticle.texting', 'uses' 
 // Rework Report
 Route::get('reworkReport', ['as' => 'reworkReport.index', 'uses' => 'ReworkReportController@index']);
 Route::patch('reworkReport', ['as' => 'reworkReport.filter', 'uses' => 'ReworkReportController@filter']);
-Route::get('reworkReport/review', ['as' => 'reworkReport.review', 'uses' => 'ReworkReportController@review']);
-Route::post('reworkReport/confirm', ['as' => 'reworkReport.confirm', 'uses' => 'ReworkReportController@confirm']);
+#Route::get('reworkReport/review', ['as' => 'reworkReport.review', 'uses' => 'ReworkReportController@review']);
+Route::post('reworkReport/email', ['as' => 'reworkReport.email', 'uses' => 'ReworkReportController@email']);
 Route::patch('reworkReport/export', ['as' => 'reworkReport.export', 'uses' => 'ReworkReportController@export']);
 

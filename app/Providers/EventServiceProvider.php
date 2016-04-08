@@ -9,8 +9,8 @@ use App\vital3\Inventory;
 use App\vital3\Item;
 use App\vital3\Location;
 use App\vital3\Pallet;
-//use App\vital40\JobExperience;
-//use App\vital40\JobStatus;
+use App\vital40\JobExperience;
+use App\vital40\JobStatus;
 use App\vital40\PerformanceTally;
 use vital40\User;
 
@@ -61,7 +61,7 @@ class EventServiceProvider extends ServiceProvider
         {
             return $item->isCreating();
         });
-/*
+
         JobExperience::creating(function($jobExperience)
         {
             return $jobExperience->isCreating();
@@ -71,7 +71,7 @@ class EventServiceProvider extends ServiceProvider
         {
             return $jobStatus->isCreating();
         });
-*/
+
         Location::creating(function($location)
         {
             return $location->isCreating();

@@ -37,10 +37,6 @@ class VitalControllerServiceProvider extends ServiceProvider {
 			'App\Http\Controllers\Receive\ReceivePOController'
 		);
 		$this->app->bind(
-			'App\Http\Controllers\ReworkReportControllerInterface',
-			'App\Http\Controllers\ReworkReportController'
-		);
-		$this->app->bind(
 			'App\Http\Controllers\RoleControllerInterface',
 			'App\Http\Controllers\RoleController'
 		);

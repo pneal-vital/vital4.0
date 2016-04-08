@@ -49,6 +49,10 @@ return [
         'deleteHasChildren'    => 'Cannot delete an :Model that has child :Children.',
         'deleteHasParent'      => 'Cannot delete an :Model connected to parent :Parent.',
 
+        'export' => [
+            'unsupportedType'  => 'ERROR: Unsupported export type :exportType',
+        ],
+
         'location' => [
             'alreadyInUse'     => ':Work_Table is already in use by :User_Name, Select a different Work Table',
             'alreadyOpen'      => 'Article still has open totes at :Location_Name, Cannot change work table',
@@ -83,6 +87,21 @@ return [
             'alreadyInUse'     => 'Article of this UPC :UPC is already in use by :User_Name, Select a different Article/UPC',
             'alreadyOpen'      => 'Article of this UPC :UPC has open totes at :Location_Name, Select a different Article/UPC',
         ],
+    ],
+
+    /*
+     * Job Names
+     */
+    'jobName' => [
+        'reworkReport' => 'App\Jobs\ReworkReportJob',
+    ],
+
+    /*
+     * Job Status
+     */
+    'jobStatus' => [
+        'submitted'    => 'Rework Report job :id has been submitted.',
+        'emailed'      => 'Rework Report job :id has completed and results have been emailed.',
     ],
 
     /*

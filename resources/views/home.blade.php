@@ -8,12 +8,6 @@
                 <div class="panel-heading">News</div>
 
                 <div class="panel-body">
-                    @if (session('status'))
-                        <div class="alert alert-success">
-                            {{ session('status') }}
-                        </div>
-                    @endif
-
                     <p><b>Watch here for application news!</b>
                     <p>This release contains these new features;
                     <ul>

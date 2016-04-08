@@ -1,6 +1,4 @@
-<?php
-
-namespace App\Jobs;
+<?php namespace App\Jobs;
 
 use vital3\Repositories\InventoryRepositoryInterface;
 use vital40\Repositories\InventorySummaryRepositoryInterface;
@@ -15,14 +13,11 @@ class PopulateInventorySummary extends Job
     // implements SelfHandling, ShouldQueue
     //use InteractsWithQueue, SerializesModels;
 
-    protected $inventoryRepository;
-    protected $inventorySummaryRepository;
-
     /**
      * Create a new job instance.
      */
     public function __construct() {
-        Log::debug(__METHOD__."(".__LINE__."):  new ");
+        Log::debug('__construct');
     }
 
     /**
@@ -33,28 +28,31 @@ class PopulateInventorySummary extends Job
     public function handle(
           InventoryRepositoryInterface $inventoryRepository
         , InventorySummaryRepositoryInterface $inventorySummaryRepository
+        , JobExperienceInterface $jobExperience
     ) {
-        $this->inventoryRepository = $inventoryRepository;
-        $this->inventorySummaryRepository = $inventorySummaryRepository;
+        $jobExperience->setClass($this);
 
-        Log::debug(__METHOD__."(".__LINE__."):  attempts: ".$this->attempts());
+        Log::debug(' attempts: '.$this->attempts());
 
         // First count the number of UPCs that have Inventory
-        $itemCount = $this->inventoryRepository->countUPCs();
-        Log::debug(__METHOD__."(".__LINE__."):  Inventory Items count: ".$itemCount);
+        $itemCount = $inventoryRepository->countUPCs();
+        Log::debug(' Inventory Items count: '.$itemCount);
+        $jobExperience->setNumberOfRecordsProcessed($itemCount);
 
         // divide by 2000 to get number of invocations required
         $invocations = intval($itemCount / 2000 * 1.6) + 1;
-        Log::debug(__METHOD__."(".__LINE__."):  invocations: ".$invocations);
+        Log::debug(' invocations: '.$invocations);
 
         $sleepSeconds = 1;
         // run the invocations
         for($i = 0; $i < $invocations; $i++) {
             sleep($sleepSeconds);
-            Log::debug(__METHOD__."(".__LINE__."):  run: ".$i);
+            Log::debug(' run: '.$i);
             //$sleepSeconds = 5;
-            $this->inventorySummaryRepository->fireStoredProcedure();
+            $inventorySummaryRepository->fireStoredProcedure();
         }
+
+        $jobExperience->ended();
     }
 
     /**
@@ -63,6 +61,6 @@ class PopulateInventorySummary extends Job
      * @return void
      */
     public function failed() {
-        Log::debug(__METHOD__."(".__LINE__.")  failed!");
+        Log::debug('failed!');
     }
 }
