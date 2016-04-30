@@ -32,5 +32,7 @@ interface PalletRepositoryInterface {
      */
     public function update($id, $input);
 
-    public function putToteIntoPallet($toteID, $palletID);
+	public function delete($id);
+
+	public function putToteIntoPallet($toteID, $palletID);
 }

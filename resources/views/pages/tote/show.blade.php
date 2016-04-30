@@ -1,5 +1,13 @@
 @extends('pages.panelList')
 
+@section('head')
+    <!-- section('head') of pages/pallet/show.blade.php  -->
+
+    @include('fields.cedIcons', ['model' => 'tote', 'elemType' => 'script'])
+
+    <!-- stop of pages/pallet/show.blade.php, section('head') -->
+@stop
+
 @section('title')
     <!-- section('title') of pages/tote/show.blade.php  -->
 
@@ -18,6 +26,8 @@
             , in @lang($levels[$i]->name): {!! link_to_route($levels[$i]->route, $levels[$i]->title, ['id' => $levels[$i]->id]) !!}
         @endif
     @endfor
+
+    @include('fields.cedIcons', ['model' => 'tote', 'elemType' => 'div', 'id' => $tote->objectID])
 
     <!-- stop of pages/tote/show.blade.php, section('heading') -->
 @stop
@@ -48,7 +58,7 @@
 @section('list')
     <!-- section('list') of pages/tote/show.blade.php  -->
 
-    {{-- var_dump($upcs) --}}
+    {{-- var_dump($inventories) --}}
     @if(isset($inventories) && count($inventories))
         <h3>{!! Lang::get('labels.titles.Inventory_in') !!} {{ $tote->Carton_ID }}</h3>
 

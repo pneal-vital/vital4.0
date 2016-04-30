@@ -9,6 +9,7 @@
         id => ID of the $model to update/delete
 --}}
 
+@if(isset($hideCEDIcons) == false)
 @if(Entrust::can([$model.'.create']) or Entrust::can([$model.'.edit']) or Entrust::can([$model.'.delete']))
     @if($elemType == 'script')
         @if(Entrust::can([$model.'.delete']))
@@ -70,6 +71,7 @@
             </td>
         @endif
     @endif
+@endif
 @endif
 
 <!-- End of fields/cedIcons.blade.php -->

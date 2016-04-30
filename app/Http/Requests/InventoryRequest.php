@@ -21,13 +21,13 @@ class inventoryRequest extends Request {
 	 */
 	public function rules()
 	{
+		if($this->exists('btn_Cancel')) return [];
 		return [
 			// Here you can refer to the fields in pages/inventory/create.blade.php & pages/inventory/edit.blade.php
 			// See: laravel.com/docs/validation
-			'Item' => 'required|numeric',
+			'Item'     => 'required|numeric',
 			'Quantity' => 'required|numeric',
-			'Order_Line' => 'required|numeric',
-			'UOM' => 'required|numeric',
+			'UOM'      => 'required|numeric',
 		];
 	}
 

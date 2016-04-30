@@ -14,6 +14,9 @@
     +-----------+-------------+------+-----+---------+-------+
 --}}
 
+@if(Entrust::hasRole(['support']))
+    @include('fields.textEntry', ['fieldName' => 'objectID' ])
+@endif
 @include('fields.textEntry', ['fieldName' => 'Pallet_ID' ])
 @if(Entrust::hasRole(['support']))
     @include('fields.textEntry', ['fieldName' => 'x'         ])

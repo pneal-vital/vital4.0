@@ -31,6 +31,7 @@ trait SaveRequest {
             $this->filterPreviousRequest($thisClassRequest);
             //Log::debug($classID.' request:',$thisClassRequest);
             $request = array_merge($thisClassRequest, $request);
+            //dd(__METHOD__.'('.__LINE__.')',compact('thisClassRequest','previousRequest','request'));
         }
         // allow for a default Filter if we don't have one
         if(count($request) == 0) {
@@ -43,14 +44,25 @@ trait SaveRequest {
         Session::put('previousRequest', $previousRequest);
         //Session::forget('PreviousRequest');
         //Log::debug(' combined request:',$request);
-        //dd(__METHOD__."(".__LINE__.")",compact('previousRequest','request'));
+        //dd(__METHOD__.'('.__LINE__.')',compact('previousRequest','request'));
         // return our composite request
         return $request;
     }
 
+    /**
+     * Here we are removing keys from the previous request for this classID
+     * @param $previousRequest
+     */
     protected function filterPreviousRequest(&$previousRequest) {
-        unset($previousRequest['_method']);
-        unset($previousRequest['_token']);
+        $unsetKeys = ['_method', '_token'];
+        foreach($previousRequest as $key => $item) {
+            if(strlen($key) > 4 and substr($key, 0, 4) == 'btn_') {
+                $unsetKeys[] = $key;
+            }
+        }
+        foreach($unsetKeys as $key) {
+            unset($previousRequest[$key]);
+        }
     }
 
     protected function defaultRequest() {

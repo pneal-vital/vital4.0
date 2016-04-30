@@ -30,14 +30,17 @@
         @endif
         <th>{!! Lang::get('labels.LocType')       !!}</th>
         <th>{!! Lang::get('labels.Comingle')      !!}</th>
+        @include('fields.cedIcons', ['model' => 'article', 'elemType' => 'th'])
     </tr>
 
+    <!-- pltID: {{ is_array($ids = (isset($pltID) ? ['pltID' => $pltID] : [])) }} -->
+    <!-- routeName: {{ $routeName = (isset($routeName) ? $routeName : 'location.show') }} -->
     @foreach($locations as $loc)
         <tr>
             @if(Entrust::hasRole(['support']))
-                <td>{!! link_to_route((isset($route) ? $route : 'location.show'), $loc->objectID, ['id' => $loc->objectID]) !!}</td>
+                <td>{!! link_to_route((isset($route) ? $route : $routeName), $loc->objectID, ['id' => $loc->objectID]+$ids) !!}</td>
             @endif
-            <td>{!! link_to_route((isset($route) ? $route : 'location.show'), $loc->Location_Name, ['id' => $loc->objectID]) !!}</td>
+            <td>{!! link_to_route((isset($route) ? $route : $routeName), $loc->Location_Name, ['id' => $loc->objectID]+$ids) !!}</td>
             @if(Entrust::hasRole(['support']))
                 <td>{{ $loc->Capacity      }}</td>
                 <td>{{ $loc->x             }}</td>
@@ -46,11 +49,14 @@
             @endif
             <td>{{ $loc->LocType       }}</td>
             <td>{{ $loc->Comingle      }}</td>
+            @include('fields.cedIcons', ['model' => 'location', 'elemType' => 'td', 'id' => $loc->objectID])
         </tr>
     @endforeach
 </table>
 
 {!! isset($location) ? $locations->appends($location)->render() : $locations->render() !!}
+
+@include('fields.cedIcons', ['model' => 'location', 'elemType' => 'script'])
 
 <!-- End of pages/location/list.blade.php -->
 

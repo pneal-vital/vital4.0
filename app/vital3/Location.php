@@ -1,13 +1,17 @@
 <?php namespace App\vital3;
 
 use Illuminate\Database\Eloquent\Model as Eloquent;
+use \Log;
 
 class Location extends Eloquent {
 
+    const CONNECTION_NAME = 'vitaldev';
+    const TABLE_NAME      = 'Location';
+
 	/** Database connection to use */
-	protected $connection = 'vitaldev';
+	protected $connection = self::CONNECTION_NAME;
 	/** Table to use */
-	protected $table = 'Location';
+	protected $table = self::TABLE_NAME;
 	/** primaryKey column */
 	protected $primaryKey = 'objectID';
 	/** Allow DB to increment $primaryKey */
@@ -61,21 +65,40 @@ class Location extends Eloquent {
      * This function can set objectID, set default values, and validate the entered field values.
      *
      * Register this function in an Event Listener, see: http://laravel.com/docs/master/events
-     * or call it from EventServiceProvider::boot(..)
+     * or call it from EventServiceProvider::boot(..) .. Location::creating
      */
     public function isCreating() {
         // set objectID
-        $inserted = VitalObject::create(['classID' => 'Location']);
+        $inserted = VitalObject::create(['classID' => self::TABLE_NAME]);
         $this->objectID = $inserted->objectID;
 
         // set default values
-        $this->Capacity = 1;
+        $this->Capacity = '1';
+        $this->x = '3.00';
+        $this->y = '2.00';
+        $this->z = '2.00';
         $this->Status = "OPEN";
         $this->ChargeType = "";
 
         /* validate the entered field values.
         if ( ! $this->isValid()) return false;
         */
+    }
+
+    /**
+     * This function is invoked before saving, (includes, create and update)
+     * See; EventServiceProvider::boot(..) ..::saving(..)
+     */
+    public function isSaving() {
+        $this->Location_Name = trim($this->Location_Name);
+        $this->Capacity      = trim($this->Capacity     );
+        $this->x             = trim($this->x            );
+        $this->y             = trim($this->y            );
+        $this->z             = trim($this->z            );
+        $this->Status        = trim($this->Status       );
+        $this->LocType       = trim($this->LocType      );
+        $this->Comingle      = trim($this->Comingle     );
+        $this->ChargeType    = trim($this->ChargeType   );
     }
 
 }

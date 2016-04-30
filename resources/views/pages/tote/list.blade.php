@@ -18,20 +18,26 @@
         @endif
         <th>{!! Lang::get('labels.Carton_ID') !!}</th>
         <th>{!! Lang::get('labels.Status')    !!}</th>
+        @include('fields.cedIcons', ['model' => 'tote', 'elemType' => 'th'])
     </tr>
 
+    <!-- invID: {{ is_array($ids = (isset($invID) ? ['invID' => $invID] : [])) }} -->
+    <!-- routeName: {{ $routeName = (isset($routeName) ? $routeName : 'tote.show') }} -->
     @foreach($totes as $t)
         <tr>
             @if(Entrust::hasRole(['support']))
-                <td>{!! link_to_route('tote.show', $t->objectID, ['id' => $t->objectID]) !!}</td>
+                <td>{!! link_to_route($routeName, $t->objectID, ['id' => $t->objectID]+$ids) !!}</td>
             @endif
-            <td>{!! link_to_route('tote.show', $t->Carton_ID, ['id' => $t->objectID]) !!}</td>
+            <td>{!! link_to_route($routeName, $t->Carton_ID, ['id' => $t->objectID]+$ids) !!}</td>
             <td>{{ Lang::get('lists.tote.status.'.$t->Status) }}</td>
+            @include('fields.cedIcons', ['model' => 'tote', 'elemType' => 'td', 'id' => $t->objectID])
         </tr>
     @endforeach
 </table>
 
 {!! isset($tote) ? $totes->appends($tote)->render() : $totes->render() !!}
+
+@include('fields.cedIcons', ['model' => 'tote', 'elemType' => 'script'])
 
 <!-- End of pages/tote/list.blade.php -->
 

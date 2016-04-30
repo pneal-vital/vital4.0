@@ -32,7 +32,9 @@ interface ToteRepositoryInterface {
 	 */
 	public function update($id, $input);
 
-    public function putInventoryIntoTote($inventoryID, $toteID);
+	public function delete($id);
+
+	public function putInventoryIntoTote($inventoryID, $toteID);
 
     public function openToteContents($locationID, $podID);
 

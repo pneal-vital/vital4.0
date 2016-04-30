@@ -4,6 +4,7 @@ use App\vital3\Container;
 use App\vital3\Location;
 use App\vital3\Pallet;
 use Illuminate\Support\Facades\DB;
+use \Log;
 
 class DBLocationRepository implements LocationRepositoryInterface {
 
@@ -28,10 +29,32 @@ class DBLocationRepository implements LocationRepositoryInterface {
 		return Location::findOrFail($id);
 	}
 
+    /**
+     * desc Location;
+    +---------------+-------------+------+-----+---------+-------+
+    | Field         | Type        | Null | Key | Default | Extra |
+    +---------------+-------------+------+-----+---------+-------+
+    | objectID      | bigint(20)  | NO   | PRI | NULL    |       |
+    | Location_Name | varchar(85) | YES  | MUL | NULL    |       |
+    | Capacity      | varchar(85) | YES  |     | NULL    |       |
+    | x             | varchar(85) | YES  |     | NULL    |       |
+    | y             | varchar(85) | YES  |     | NULL    |       |
+    | z             | varchar(85) | YES  |     | NULL    |       |
+    | Status        | varchar(85) | YES  |     | NULL    |       |
+    | LocType       | varchar(85) | YES  | MUL | NULL    |       |
+    | Comingle      | varchar(85) | YES  |     | NULL    |       |
+    | ChargeType    | varchar(85) | YES  |     | NULL    |       |
+    +---------------+-------------+------+-----+---------+-------+
+    10 rows in set (0.00 sec)
+     * @param $filter
+     * @return mixed
+     */
 	protected function rawFilter($filter) {
+        //Log::debug('query: ',$filter);
 		// Build a query based on filter $filter
         $orderBy = 'Location_Name';
-		$query = Location::query();
+		$query = Location::query()
+            ->select('Location.objectID', 'Location.Location_Name', 'Location.Capacity', 'Location.x', 'Location.y', 'Location.z', 'Location.Status', 'Location.LocType', 'Location.Comingle', 'Location.ChargeType');
 		if(isset($filter['objectID']) && strlen($filter['objectID']) > 1) {
 			$query->where('objectID', 'like', $filter['objectID'] . '%');
 		}
@@ -62,11 +85,23 @@ class DBLocationRepository implements LocationRepositoryInterface {
         if(isset($filter['Comingle']) && strlen($filter['Comingle']) > 0) {
             $query->where('Comingle', 'like', $filter['Comingle'] . '%');
         }
+        /*
+         * container.parent should generate this sql request
+         * select Location.* from Location join container loc on loc.objectID = Location.objectID where loc.parentID = 6213292055;
+         */
         if(isset($filter['container.parent']) && strlen($filter['container.parent']) > 3) {
-            $query->whereRaw('objectID in (select objectID from container where parentID = '.$filter['container.parent'].')');
+            $query
+                ->join('container as loc', 'loc.objectID', '=', 'Location.objectID')
+                ->where('loc.parentID',$filter['container.parent']);
         }
+        /*
+         * container.child should generate this sql request
+         * select Location.* from Location join container plt on plt.parentID = Location.objectID where plt.objectID = 6213292075;
+         */
         if(isset($filter['container.child']) && strlen($filter['container.child']) > 3) {
-            $query->whereRaw('objectID in (select parentID from container where objectID = '.$filter['container.child'].')');
+            $query
+                ->join('container as plt', 'plt.parentID', '=', 'Location.objectID')
+                ->where('plt.objectID',$filter['container.child']);
         }
         if($orderBy) {
             $query->orderBy('Location_Name', 'asc');
@@ -98,7 +133,8 @@ class DBLocationRepository implements LocationRepositoryInterface {
 	 * Implement create($input)
 	 */
 	public function create($input) {
-		return Location::create($input);
+        Log::info('Create Location', $input);
+        return Location::create($input);
 	}
 
     /**
@@ -107,11 +143,33 @@ class DBLocationRepository implements LocationRepositoryInterface {
     public function update($id, $input) {
         $location = Location::find($id);
 
-        //dd($input);
+        //dd(__METHOD__.'('.__LINE__.')',compact('id','input'));
+        Log::info("Update Location $id", $input);
         return $location->update($input);
     }
 
     /**
+     * Implement delete($id)
+     */
+    public function delete($id) {
+        $deleted = true;
+        $location = $this->find($id);
+
+        if(isset($location)) {
+            //dd(__METHOD__.'('.__LINE__.')',compact('id','location'));
+            Log::info("Delete Location $id");
+            $deleted = $location->delete();
+
+            // delete the container object also
+            DB::connection('vitaldev')
+                ->statement('delete from container where objectID = '.$id);
+        }
+
+        return $deleted;
+    }
+
+    /**
+     * IMPORTANT: Call this function name on the Controller to verify this action is allowed
      * Implement putPalletIntoLocation($palletID, $locationID)
      */
     public function putPalletIntoLocation($palletID, $locationID) {
@@ -121,14 +179,23 @@ class DBLocationRepository implements LocationRepositoryInterface {
             ->table('container')
             ->where('objectID', $palletID)->first();
 
+        Log::info("Put Pallet $palletID into Location $locationID");
         if(isset($container)) {
-            DB::connection('vitaldev')
+            $result = DB::connection('vitaldev')
                 ->table('container')
                 ->where('containerID', $container->containerID)
                 ->update(['parentID' => $locationID, 'objectID' => $palletID]);
+            // $result === 1/true if the container was updated
+            // $result === 0/false if no containers were updated
+            if($result === 1 or $result === 0) return true;
         } else {
-            Container::create(['parentID' => $locationID, 'objectID' => $palletID]);
+            $result = Container::create(['parentID' => $locationID, 'objectID' => $palletID]);
+            // $result == container object created
+            if(isset($result) and get_class($result) == 'App\vital3\Container') return true;
         }
+        Log::error('putPalletIntoLocation failed');
+        //dd(__METHOD__.'('.__LINE__.')',compact('palletID','locationID','pallet','location','container','result'));
+        return ['putPalletIntoLocation failed'];
     }
 
 }

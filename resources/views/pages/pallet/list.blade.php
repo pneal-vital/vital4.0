@@ -26,25 +26,31 @@
             <th>{!! Lang::get('labels.z')         !!}</th>
         @endif
         <th>{!! Lang::get('labels.Status')    !!}</th>
+        @include('fields.cedIcons', ['model' => 'pallet', 'elemType' => 'th'])
     </tr>
 
+    <!-- gcID: {{ is_array($ids = (isset($gcID) ? ['gcID' => $gcID] : [])) }} -->
+    <!-- routeName: {{ $routeName = (isset($routeName) ? $routeName : 'pallet.show') }} -->
     @foreach($pallets as $plt)
         <tr>
             @if(Entrust::hasRole(['support']))
-                <td>{!! link_to_route((isset($route) ? $route : 'pallet.show'), $plt->objectID, ['id' => $plt->objectID]) !!}</td>
+                <td>{!! link_to_route((isset($route) ? $route : $routeName), $plt->objectID, ['id' => $plt->objectID]+$ids) !!}</td>
             @endif
-            <td>{!! link_to_route((isset($route) ? $route : 'pallet.show'), $plt->Pallet_ID, ['id' => $plt->objectID]) !!}</td>
+            <td>{!! link_to_route((isset($route) ? $route : $routeName), $plt->Pallet_ID, ['id' => $plt->objectID]+$ids) !!}</td>
             @if(Entrust::hasRole(['support']))
                 <td>{{ $plt->x         }}</td>
                 <td>{{ $plt->y         }}</td>
                 <td>{{ $plt->z         }}</td>
             @endif
             <td>{{ Lang::get('lists.pallet.status.'.$plt->Status) }}</td>
+            @include('fields.cedIcons', ['model' => 'pallet', 'elemType' => 'td', 'id' => $plt->objectID])
         </tr>
     @endforeach
 </table>
 
 {!! isset($pallet) ? $pallets->appends($pallet)->render() : $pallets->render() !!}
+
+@include('fields.cedIcons', ['model' => 'pallet', 'elemType' => 'script'])
 
 <!-- End of pages/pallet/list.blade.php -->
 

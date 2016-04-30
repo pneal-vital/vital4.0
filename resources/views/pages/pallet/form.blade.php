@@ -19,9 +19,13 @@
     @include('fields.textEntry', ['fieldName' => 'x'         ])
     @include('fields.textEntry', ['fieldName' => 'y'         ])
     @include('fields.textEntry', ['fieldName' => 'z'         ])
+@else
+    {!! Form::hidden('x',Form::getValueAttribute('x')) !!}
+    {!! Form::hidden('y',Form::getValueAttribute('y')) !!}
+    {!! Form::hidden('z',Form::getValueAttribute('z')) !!}
 @endif
-@include('fields.ddList'   , ['fieldName' => 'Status', 'lists' => (['0' => Lang::get('labels.enter.Status')]+Lang::get('lists.pallet.status'))])
+@include('fields.ddList', ['fieldName' => 'Status', 'lists' => (['0' => Lang::get('labels.enter.Status')]+Lang::get('lists.pallet.status'))])
 
-@include('fields.button')
+@include('fields.button', ['CancelButton' => 'Cancel'])
 
 <!-- End of pages/pallet/form.blade.php -->

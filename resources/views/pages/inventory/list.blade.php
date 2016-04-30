@@ -30,6 +30,7 @@
         <th>{!! Lang::get('labels.Status')     !!}</th>
         <th>{!! Lang::get('labels.Order_Line') !!}</th>
         <th>{!! Lang::get('labels.UOM')        !!}</th>
+        @include('fields.cedIcons', ['model' => 'inventory', 'elemType' => 'th'])
     </tr>
 
     @foreach($inventories as $inv)
@@ -50,7 +51,7 @@
             <td>{{ $inv->Created    }}</td>
             <td>{{ Lang::get('lists.inventory.status.'.$inv->Status) }}</td>
             @if(isset($inv->Order_Line_type))
-                <td>({{ $inv->Order_Line_type }})
+                <td>({{ Lang::get('labels.'.$inv->Order_Line_type) }})
                     @if($inv->Order_Line_type == 'OutboundOrderDetail')
                         {{ $inv->Order_Line }}
                     @else
@@ -61,11 +62,14 @@
                 <td>{{ $inv->Order_Line }}</td>
             @endif
             <td>{{ isset($inv->UOM) && isset($uoms[$inv->UOM]) ? $uoms[$inv->UOM] : $inv->UOM }}</td>
+            @include('fields.cedIcons', ['model' => 'inventory', 'elemType' => 'td', 'id' => $inv->objectID])
         </tr>
     @endforeach
 </table>
 
 {!! isset($inventory) ? $inventories->appends($inventory)->render() : $inventories->render() !!}
+
+@include('fields.cedIcons', ['model' => 'inventory', 'elemType' => 'script'])
 
 <!-- End of pages/inventory/list.blade.php -->
 

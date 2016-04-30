@@ -42,12 +42,19 @@
                 </div>
             @endif
 
-            @if(session('status'))
+            @if(session('status') or session('warning'))
                 <div class="col-md-10 col-md-offset-2">
                     <div class="col-md-9">
-                        <div class="alert alert-success">
-                            {{ session('status') }}
-                        </div>
+                        @if(session('status'))
+                            <div class="alert alert-success">
+                                {{ session('status') }}
+                            </div>
+                        @endif
+                        @if(session('warning'))
+                            <div class="alert alert-warning">
+                                {{ session('warning') }}
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endif

@@ -16,6 +16,9 @@
     +---------------+-------------+------+-----+---------+-------+
 --}}
 
+@if(Entrust::hasRole(['support']))
+    @include('fields.textEntry', ['fieldName' => 'objectID' ])
+@endif
 @include('fields.textEntry', ['fieldName' => 'Location_Name' ])
 @if(Entrust::hasRole(['support']))
     @include('fields.textEntry', ['fieldName' => 'Capacity'      ])

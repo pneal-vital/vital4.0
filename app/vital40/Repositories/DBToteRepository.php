@@ -31,47 +31,70 @@ class DBToteRepository implements ToteRepositoryInterface {
 		return GenericContainer::findOrFail($id);
 	}
 
+    /**
+     * desc Generic_Container;
+    +-----------+-------------+------+-----+---------+-------+
+    | Field     | Type        | Null | Key | Default | Extra |
+    +-----------+-------------+------+-----+---------+-------+
+    | objectID  | bigint(20)  | NO   | PRI | NULL    |       |
+    | Carton_ID | varchar(85) | YES  | MUL | NULL    |       |
+    | Status    | varchar(85) | YES  |     | OPEN    |       |
+    +-----------+-------------+------+-----+---------+-------+
+    3 rows in set (0.01 sec)
+     * @param $filter
+     * @return mixed
+     */
 	protected function rawFilter($filter) {
-        Log::debug(__METHOD__.'('.__LINE__.'):  query: ',$filter);
+        //Log::debug('query: ',$filter);
         // Build a query based on filter $input
         $query = GenericContainer::query()
-            ->select('Generic_Container.objectID', 'Generic_Container.Carton_ID', 'Generic_Container.Status');
+            ->select('Generic_Container.objectID', 'Generic_Container.Carton_ID', 'Generic_Container.Status')
+            ->orderBy('Carton_ID', 'asc');
         if(isset($filter['objectID']) && strlen($filter['objectID']) > 3) {
-            $query = $query->where('Generic_Container.objectID', 'like', $filter['objectID'] . '%');
+            $query->where('Generic_Container.objectID', 'like', $filter['objectID'] . '%');
         }
         if(isset($filter['Carton_ID']) && strlen($filter['Carton_ID']) > 3) {
-            $query = $query->where('Generic_Container.Carton_ID', 'like', ltrim($filter['Carton_ID'],'0') . '%');
+            $query->where('Generic_Container.Carton_ID', 'like', ltrim($filter['Carton_ID'],'0') . '%');
         }
         if(isset($filter['Status']) && is_array($filter['Status'])) {
-            $query = $query->whereRaw("Generic_Container.Status in ('".implode("','", $filter['Status'])."')");
+            $query->whereRaw("Generic_Container.Status in ('".implode("','", $filter['Status'])."')");
         }
         elseif(isset($filter['Status']) && strlen($filter['Status']) > 3) {
-            $query = $query->where('Generic_Container.Status', '=', $filter['Status']);
+            $query->where('Generic_Container.Status', '=', $filter['Status']);
         }
+        //dd(__METHOD__."(".__LINE__.")",compact('filter','query'));
+        /*
+         * container.parent should generate this sql request
+         * select Generic_Container.* from Generic_Container join container gc on gc.objectID = Generic_Container.objectID where gc.parentID = 6232065627;
+         */
         if(isset($filter['container.parent']) && strlen($filter['container.parent']) > 3) {
-            // TODO rewrite this query, see examples below
-            $query = $query->whereRaw('objectID in (select objectID from container where parentID = '.$filter['container.parent'].')');
+            $query
+                ->join('container as gc', 'gc.objectID', '=', 'Generic_Container.objectID')
+                ->where('gc.parentID',$filter['container.parent']);
         }
+        /*
+         * container.child should generate this sql request
+         * select Generic_Container.* from Generic_Container join container inv on inv.parentID = Generic_Container.objectID where inv.objectID = 6232067838;
+         */
         if(isset($filter['container.child']) && strlen($filter['container.child']) > 3) {
-            // TODO rewrite this query, see examples below
-            $query = $query->whereRaw('objectID in (select parentID from container where objectID = '.$filter['container.child'].')');
+            $query
+                ->join('container as inv', 'inv.parentID', '=', 'Generic_Container.objectID')
+                ->where('inv.objectID',$filter['container.child']);
         }
         if(isset($filter['upcID']) && strlen($filter['upcID']) > 3) {
-            $query = $query
+            $query
                 ->join('container as inv', 'inv.parentID', '=', 'Generic_Container.objectID')
                 ->join('Inventory', 'Inventory.objectID', '=', 'inv.objectID')
-                ->select('Generic_Container.objectID', 'Generic_Container.Carton_ID', 'Generic_Container.Status')
                 ->where('Inventory.Item', $filter['upcID']);
         }
         // TODO remove this if block, check if it is being used.
         if(isset($filter['Location.parent']) && strlen($filter['Location.parent']) > 3) {
-            $query = $query->whereRaw('objectID in (select gc.objectID from container gc  join container plt on plt.objectID = gc.parentID  where plt.parentID = '.$filter['Location.parent'].')');
+            $query->whereRaw('objectID in (select gc.objectID from container gc  join container plt on plt.objectID = gc.parentID  where plt.parentID = '.$filter['Location.parent'].')');
         }
         if(isset($filter['locationID']) && strlen($filter['locationID']) > 3) {
-            $query = $query
+            $query
                 ->join('container as gc', 'gc.objectID', '=', 'Generic_Container.objectID')
                 ->join('container as plt', 'plt.objectID', '=', 'gc.parentID')
-                ->select('Generic_Container.objectID', 'Generic_Container.Carton_ID', 'Generic_Container.Status')
                 ->where('plt.parentID', $filter['locationID']);
         }
         return $query;
@@ -83,7 +106,8 @@ class DBToteRepository implements ToteRepositoryInterface {
 	public function filterOn($filter, $limit=10) {
 
         if(isset($filter['THOU.container.child'])) {
-            return DB::connection('vitaldev')
+            //TODO remove this, use the improved $filter['container.child']
+            return DB::connection(GenericContainer::CONNECTION_NAME)
                 ->table('Generic_Container')
                 ->join('container as inv', 'inv.parentID', '=', 'Generic_Container.objectID')
                 ->select('Generic_Container.objectID', 'Generic_Container.Carton_ID', 'Generic_Container.Status')
@@ -92,7 +116,7 @@ class DBToteRepository implements ToteRepositoryInterface {
         }
 
         if(isset($filter['THOU.Location.parent'])) {
-            return DB::connection('vitaldev')
+            return DB::connection(GenericContainer::CONNECTION_NAME)
                 ->table('Generic_Container')
                 ->join('container as gc', 'gc.objectID', '=', 'Generic_Container.objectID')
                 ->join('container as plt', 'plt.objectID', '=', 'gc.parentID')
@@ -102,7 +126,7 @@ class DBToteRepository implements ToteRepositoryInterface {
         }
 
         if(isset($filter['THOU.locID_and_podID'])) {
-            return DB::connection('vitaldev')
+            return DB::connection(GenericContainer::CONNECTION_NAME)
                 ->table('container as plt')
                 ->join('container as gc', 'gc.parentID', '=', 'plt.objectID')
                 ->join('Generic_Container', 'Generic_Container.objectID', '=', 'gc.objectID')
@@ -115,7 +139,7 @@ class DBToteRepository implements ToteRepositoryInterface {
         }
 
         if(isset($filter['THOU.locID_not_podID'])) {
-            return DB::connection('vitaldev')
+            return DB::connection(GenericContainer::CONNECTION_NAME)
                 ->table('container as plt')
                 ->join('container as gc', 'gc.parentID', '=', 'plt.objectID')
                 ->join('Generic_Container', 'Generic_Container.objectID', '=', 'gc.objectID')
@@ -148,6 +172,7 @@ class DBToteRepository implements ToteRepositoryInterface {
      */
     public function findOrCreate($filter) {
         $tote = $this->filterOn($filter, 1);
+        Log::debug('tote: '.(isset($tote) ? $tote->Carton_ID : "null"));
         // if we didn't find one, do we want to create one?
         if(!isset($tote) && isset($filter['Carton_ID']) && strlen($filter['Carton_ID']) > 3) {
             // is it the Carton_ID format correct?
@@ -156,6 +181,7 @@ class DBToteRepository implements ToteRepositoryInterface {
                 if(!isset($filter['Status']) || strlen($filter['Status']) == 0) {
                     $filter['Status'] = Config::get('constants.tote.status.open');
                 }
+                Log::info('Create Tote',$filter);
                 $tote = $this->create($filter);
             }
         }
@@ -166,6 +192,7 @@ class DBToteRepository implements ToteRepositoryInterface {
 	 * Implement create($input)
 	 */
 	public function create($input) {
+        Log::info('Create Tote', $input);
 		return GenericContainer::create($input);
 	}
 
@@ -175,9 +202,30 @@ class DBToteRepository implements ToteRepositoryInterface {
 	public function update($id, $input) {
 		$tote = GenericContainer::find($id);
 
-		//dd($input);
+		//dd(__METHOD__.'('.__LINE__.')',compact('id','input','tote'));
+        Log::info("Update Tote $id", $input);
 		return $tote->update($input);
 	}
+
+    /**
+     * Implement delete($id)
+     */
+    public function delete($id) {
+        $deleted = true;
+        $tote = $this->find($id);
+
+        if(isset($tote)) {
+            //dd(__METHOD__.'('.__LINE__.')',compact('id','tote'));
+            Log::info("Delete Tote $id");
+            $deleted = $tote->delete();
+
+            // delete the container object also
+            DB::connection(GenericContainer::CONNECTION_NAME)
+                ->statement('delete from container where objectID = '.$id);
+        }
+
+        return $deleted;
+    }
 
     /**
      * Implement getAdditional($id)
@@ -188,21 +236,34 @@ class DBToteRepository implements ToteRepositoryInterface {
         return GenericContainerAdditional::whereObjectid($id)->limit(20)->get();
     }
 
+    /**
+     * IMPORTANT: Call this function name on the Controller to verify this action is allowed
+     * Implement putInventoryIntoTote($inventoryID, $toteID)
+     */
     public function putInventoryIntoTote($inventoryID, $toteID) {
         $inventory = Inventory::findOrFail($inventoryID);
         $tote = GenericContainer::findOrFail($toteID);
-        $container = DB::connection('vitaldev')
+        $container = DB::connection(GenericContainer::CONNECTION_NAME)
             ->table('container')
             ->where('objectID', $inventoryID)->first();
 
+        Log::info("Put Inventory $inventoryID into Tote $toteID");
         if(isset($container)) {
-            DB::connection('vitaldev')
+            $result = DB::connection(GenericContainer::CONNECTION_NAME)
                 ->table('container')
                 ->where('containerID', $container->containerID)
                 ->update(['parentID' => $toteID, 'objectID' => $inventoryID]);
+            // $result === 1/true if the container was updated
+            // $result === 0/false if no containers were updated
+            if($result === 1 or $result === 0) return true;
         } else {
-            Container::create(['parentID' => $toteID, 'objectID' => $inventoryID]);
+            $result = Container::create(['parentID' => $toteID, 'objectID' => $inventoryID]);
+            // $result == container object created
+            if(isset($result) and get_class($result) == 'App\vital3\Container') return true;
         }
+        Log::error('putInventoryIntoTote failed');
+        //dd(__METHOD__.'('.__LINE__.')',compact('inventoryID','toteID','inventory','tote','container','result'));
+        return ['putInventoryIntoTote failed'];
     }
 
     public function openToteContents($locationID, $podID) {
@@ -228,7 +289,7 @@ class DBToteRepository implements ToteRepositoryInterface {
             +------------+------------------------+------------+-------------+--------------------------------+
             5 rows in set (2.31 sec)
          */
-        $upcData = DB::connection('vitaldev')
+        $upcData = DB::connection(GenericContainer::CONNECTION_NAME)
             ->table('Inbound_Order_Detail')
             ->join('Item as Article', 'Article.objectID', '=', 'Inbound_Order_Detail.SKU')
             ->join('itemKit', 'itemKit.parentID', '=', 'Article.objectID')
@@ -251,7 +312,7 @@ class DBToteRepository implements ToteRepositoryInterface {
     }
 
     public function isEmpty($toteID) {
-        $container = DB::connection('vitaldev')
+        $container = DB::connection(GenericContainer::CONNECTION_NAME)
             ->table('container')
             ->where('parentID', $toteID)->first();
         return isset($container) == false;

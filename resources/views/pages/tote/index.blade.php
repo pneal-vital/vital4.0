@@ -13,6 +13,12 @@
 
     @lang('labels.titles.Tote_Filter')
 
+    @if(Entrust::can(['pallet.create']))
+        <div class="pull-right">
+            <a href="{{URL::route('tote.create')}}" title="{{ Lang::get('labels.icons.create') }}">{!! Html::image('img/create.png', Lang::get('labels.icons.create'),array('height'=>'20','width'=>'20')) !!}</a>
+        </div>
+    @endif
+
     <!-- stop of pages/tote/index.blade.php, section('heading') -->
 @stop
 

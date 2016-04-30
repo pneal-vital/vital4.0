@@ -26,6 +26,8 @@ interface LocationRepositoryInterface {
      */
     public function update($id, $input);
 
+	public function delete($id);
+
     public function putPalletIntoLocation($palletID, $locationID);
 
 }

@@ -1,5 +1,13 @@
 @extends('pages.panelList')
 
+@section('head')
+    <!-- section('head') of pages/location/show.blade.php  -->
+
+    @include('fields.cedIcons', ['model' => 'location', 'elemType' => 'script'])
+
+    <!-- stop of pages/location/show.blade.php, section('head') -->
+@stop
+
 @section('title')
     <!-- section('title') of pages/location/show.blade.php  -->
 
@@ -18,6 +26,8 @@
             , in @lang($levels[$i]->name): {!! link_to_route($levels[$i]->route, $levels[$i]->title, ['id' => $levels[$i]->id]) !!}
         @endif
     @endfor
+
+    @include('fields.cedIcons', ['model' => 'location', 'elemType' => 'div', 'id' => $location->objectID])
 
     <!-- stop of pages/location/show.blade.php, section('heading') -->
 @stop
@@ -41,6 +51,9 @@
     +---------------+-------------+------+-----+---------+-------+
     --}}
 
+    @if(Entrust::hasRole(['support']))
+        @include('fields.textList', ['fieldName' => 'objectID' , 'fieldValue' => $location->objectID  ])
+    @endif
     @include('fields.textList', ['fieldName' => 'Location_Name', 'fieldValue' => $location->Location_Name ])
     @if(Entrust::hasRole(['support']))
         @include('fields.textList', ['fieldName' => 'Capacity'     , 'fieldValue' => $location->Capacity      ])
@@ -59,7 +72,11 @@
 
     {{-- var_dump($pallets) --}}
     @if(isset($pallets) && count($pallets))
-        <h3>{!! Lang::get('labels.titles.Pallets_in') !!} {{ $location->Location_Name }}</h3>
+        @if(substr($location->LocType,0,4) == 'PICK' or $location->LocType == 'RESERVE')
+            <h3>{!! Lang::get('labels.titles.Pallets_in') !!} {{ $location->Location_Name }}</h3>
+        @else
+            <h3>{!! Lang::get('labels.titles.Carts_in') !!} {{ $location->Location_Name }}</h3>
+        @endif
 
         <!-- reuse pages.pallet.list -->
         @include('pages.pallet.list')

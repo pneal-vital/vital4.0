@@ -18,4 +18,12 @@ interface LocationControllerInterface {
      */
     public function buildHeading($location);
 
+    /**
+     * Put a pallet into a Location.
+     * ComingleRules verifies move this pallet into this Location is allowed.
+     *
+     * Returns true if it was successful, otherwise returns an error message.
+     */
+    public function putPalletIntoLocation($palletID, $locationID);
+
 }

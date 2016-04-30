@@ -28,6 +28,8 @@ interface InventoryRepositoryInterface {
      */
     public function update($id, $input);
 
+	public function delete($id);
+
     public function onHandReport($filter);
 
     public function countUPCs();

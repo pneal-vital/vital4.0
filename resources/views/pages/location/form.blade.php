@@ -19,13 +19,18 @@
 @include('fields.textEntry', ['fieldName' => 'Location_Name'])
 @if(Entrust::hasRole(['support']))
     @include('fields.textEntry', ['fieldName' => 'Capacity'])
-    @include('fields.textEntry', ['fieldName' => 'x'])
-    @include('fields.textEntry', ['fieldName' => 'y'])
-    @include('fields.textEntry', ['fieldName' => 'z'])
+    @include('fields.textEntry', ['fieldName' => 'x'       ])
+    @include('fields.textEntry', ['fieldName' => 'y'       ])
+    @include('fields.textEntry', ['fieldName' => 'z'       ])
+@else
+    {!! Form::hidden('Capacity',Form::getValueAttribute('Capacity')) !!}
+    {!! Form::hidden('x'       ,Form::getValueAttribute('x'       )) !!}
+    {!! Form::hidden('y'       ,Form::getValueAttribute('y'       )) !!}
+    {!! Form::hidden('z'       ,Form::getValueAttribute('z'       )) !!}
 @endif
-@include('fields.textEntry', ['fieldName' => 'LocType'])
+@include('fields.textEntry', ['fieldName' => 'LocType' ])
 @include('fields.textEntry', ['fieldName' => 'Comingle'])
 
-@include('fields.button')
+@include('fields.button', ['CancelButton' => 'Cancel'])
 
 <!-- End of pages/location/form.blade.php -->

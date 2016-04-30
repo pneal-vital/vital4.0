@@ -17,13 +17,14 @@
     7 rows in set (0.01 sec)
 --}}
 
+<!-- TODO this next line should lead to a filtered selection list of UPCs -->
 @include('fields.textEntry', ['fieldName' => 'Item'       ])
 @include('fields.textEntry', ['fieldName' => 'Quantity'   ])
-@include('fields.dateEntry', ['fieldName' => 'Created'    ])
 @include('fields.ddList'   , ['fieldName' => 'Status', 'lists' => (['0' => Lang::get('labels.enter.Status')]+Lang::get('lists.inventory.status')) ])
+<!-- TODO this next line should lead to a filtered selection list of inbound/outbound OrderDetail lines -->
 @include('fields.textEntry', ['fieldName' => 'Order_Line' ])
 @include('fields.ddList'   , ['fieldName' => 'UOM', 'lists' => $uoms])
 
-@include('fields.button')
+@include('fields.button', ['CancelButton' => 'Cancel'])
 
 <!-- End of pages/inventory/form.blade.php -->

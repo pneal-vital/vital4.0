@@ -32,6 +32,8 @@ return [
         'unknown'               => "Don't understand your entry",
     ],
 
+    'created' => ':class created successfully.',
+
     /*
      * errors messages
      */
@@ -44,6 +46,15 @@ return [
             'notFound'         => 'Article :Article is not found',
             'notOfThisPO'      => 'Article :Article or UPC is not from Purchase Order :Purchase_Order',
             'openTotes'        => 'Article :Article has open tote :ToteID in :Location_Name',
+        ],
+
+        'comingleRules'  => [
+            'breaks'           => 'Cannot perform this move, it breaks comingling rules',
+            'notMoveComingle'  => 'Cannot move :invComingled inventory in with the inventory in tote :Carton_ID',
+            'notMoveLocType'   => 'Cannot move from :from into :to location',
+            'palletController' => 'ERROR: Pallet Controller is not available',
+            'reserve'          => 'Cannot move this into a Reserve location',
+            'notSupported'     => 'Comingling rules not yet supported in this module',
         ],
 
         'deleteHasChildren'    => 'Cannot delete an :Model that has child :Children.',
@@ -60,7 +71,9 @@ return [
             'notValidLocation' => ':Work_Table is not a unique location, click Select a Work Table',
         ],
 
+        'noParent'             => 'Warning: This object is not located!',
         'notAuthorized'        => 'Not authorized to :action a :object of :id',
+        'notFound'             => 'Error: :classID :objectID is not found.',
 
         'pallet' => [
             'notFound'         => 'Error: Scanned Cart :palletID is not found - Scan a Cart Label',
@@ -142,6 +155,8 @@ return [
             'st'    => 'ST',
         ],
     ],
+
+    'updated' => ':class updated successfully.',
 
     /*
      * UserActivity

@@ -4,10 +4,14 @@ use Illuminate\Database\Eloquent\Model as Eloquent;
 
 class GenericContainer extends Eloquent {
 
+	const CONNECTION_NAME = 'vitaldev';
+	const TABLE_NAME      = 'Generic_Container';
+    const TABLE_SYNONYM   = 'Tote';
+
 	/** Database connection to use */
-	protected $connection = 'vitaldev';
+	protected $connection = self::CONNECTION_NAME;
 	/** Table to use */
-	protected $table = 'Generic_Container';
+	protected $table = self::TABLE_NAME;
 	/** primaryKey column */
 	protected $primaryKey = 'objectID';
 	/** Allow DB to increment $primaryKey */
@@ -49,7 +53,7 @@ class GenericContainer extends Eloquent {
      */
     public function isCreating() {
         // set objectID
-        $inserted = VitalObject::create(['classID' => 'Generic_Container']);
+        $inserted = VitalObject::create(['classID' => self::TABLE_NAME]);
         $this->objectID = $inserted->objectID;
 
         // set default values
@@ -59,5 +63,14 @@ class GenericContainer extends Eloquent {
         if ( ! $this->isValid()) return false;
         */
     }
+
+	/**
+	 * This function is invoked before saving, (includes, create and update)
+	 * See; EventServiceProvider::boot(..) ..::saving(..)
+	 */
+	public function isSaving() {
+		$this->Carton_ID = trim($this->Carton_ID);
+		$this->Status    = trim($this->Status   );
+	}
 
 }

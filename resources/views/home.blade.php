@@ -24,6 +24,9 @@
                         @if(Entrust::hasRole(['teamLead', 'super', 'manager', 'support']))
                             <li>"Forget Your Password?" on Login page will email to you a link that can change your password.</li>
                         @endif
+                        @if(Entrust::hasRole(['manager', 'support']))
+                            <li>Enhanced Location, Pallet, Tote and Inventory management screens.</li>
+                        @endif
                     </ul>
                     <p>Previous release features;
                     <ul>

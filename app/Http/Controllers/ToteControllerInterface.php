@@ -1,7 +1,6 @@
 <?php namespace App\Http\Controllers;
 
 
-
 /**
  * Interface ToteControllerInterface
  * @package App\Http\Controllers
@@ -18,4 +17,11 @@ interface ToteControllerInterface {
      */
     public function buildHeading($pallet);
 
+    /**
+     * Put a inventory into a tote.
+     * ComingleRules verifies move this inventory into this tote is allowed.
+     *
+     * Returns true if it was successful, otherwise returns an error message.
+     */
+    public function putInventoryIntoTote($inventoryID, $toteID);
 }

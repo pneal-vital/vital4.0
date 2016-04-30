@@ -15,7 +15,7 @@
     @include('fields.textEntry', ['fieldName' => 'objectID' ])
 @endif
 @include('fields.textEntry', ['fieldName' => 'Carton_ID' ])
-@include('fields.ddList'   , ['fieldName' => 'Status', 'lists' => $statuses, 'onChangeSubmit' => 'true' ])
+@include('fields.ddList'   , ['fieldName' => 'Status', 'lists' => (['0' => Lang::get('labels.enter.Status')]+Lang::get('lists.tote.status')), 'onChangeSubmit' => 'true' ])
 
 @include('fields.button')
 

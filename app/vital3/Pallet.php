@@ -4,10 +4,14 @@ use Illuminate\Database\Eloquent\Model as Eloquent;
 
 class Pallet extends Eloquent {
 
+    const CONNECTION_NAME = 'vitaldev';
+    const TABLE_NAME      = 'Pallet';
+    const TABLE_SYNONYM   = 'Cart';
+
 	/** Database connection to use */
-	protected $connection = 'vitaldev';
+	protected $connection = self::CONNECTION_NAME;
 	/** Table to use */
-	protected $table = 'Pallet';
+	protected $table = self::TABLE_NAME;
 	/** primaryKey column */
 	protected $primaryKey = 'objectID';
 	/** Allow DB to increment $primaryKey */
@@ -54,18 +58,32 @@ class Pallet extends Eloquent {
      */
     public function isCreating() {
         // set objectID
-        $inserted = VitalObject::create(['classID' => 'Pallet']);
+        $inserted = VitalObject::create(['classID' => self::TABLE_NAME]);
         $this->objectID = $inserted->objectID;
         if(!isset($this->Pallet_ID) || strlen($this->Pallet_ID) == 0) {
             $this->Pallet_ID = $inserted->objectID;
         }
 
         // set default values
-        //$this->Status = "OPEN";
+        $this->x = '1';
+        $this->y = '1';
+        $this->z = '1';
 
         /* validate the entered field values.
         if ( ! $this->isValid()) return false;
         */
+    }
+
+    /**
+     * This function is invoked before saving, (includes, create and update)
+     * See; EventServiceProvider::boot(..) ..::saving(..)
+     */
+    public function isSaving() {
+        $this->Pallet_ID = trim($this->Pallet_ID);
+        $this->x         = trim($this->x        );
+        $this->y         = trim($this->y        );
+        $this->z         = trim($this->z        );
+        $this->Status    = trim($this->Status   );
     }
 
 }

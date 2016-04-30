@@ -1,5 +1,13 @@
 @extends('pages.panelList')
 
+@section('head')
+    <!-- section('head') of pages/pallet/show.blade.php  -->
+
+    @include('fields.cedIcons', ['model' => 'pallet', 'elemType' => 'script'])
+
+    <!-- stop of pages/pallet/show.blade.php, section('head') -->
+@stop
+
 @section('title')
     <!-- section('title') of pages/pallet/show.blade.php  -->
 
@@ -18,6 +26,8 @@
             , in @lang($levels[$i]->name): {!! link_to_route($levels[$i]->route, $levels[$i]->title, ['id' => $levels[$i]->id]) !!}
         @endif
     @endfor
+
+    @include('fields.cedIcons', ['model' => 'pallet', 'elemType' => 'div', 'id' => $pallet->objectID])
 
     <!-- stop of pages/pallet/show.blade.php, section('heading') -->
 @stop
@@ -39,6 +49,9 @@
     +-----------+-------------+------+-----+---------+-------+
     --}}
 
+    @if(Entrust::hasRole(['support']))
+        @include('fields.textList', ['fieldName' => 'objectID' , 'fieldValue' => $pallet->objectID  ])
+    @endif
     @include('fields.textList', ['fieldName' => 'Pallet_ID', 'fieldValue' => $pallet->Pallet_ID ])
     @if(Entrust::hasRole(['support']))
         @include('fields.textList', ['fieldName' => 'x'        , 'fieldValue' => $pallet->x         ])

@@ -48,6 +48,10 @@ class VitalControllerServiceProvider extends ServiceProvider {
 			'App\Http\Controllers\UOMControllerInterface',
 			'App\Http\Controllers\UOMController'
 		);
+		$this->app->bind(
+			'App\Http\Controllers\WarehouseControllerInterface',
+			'App\Http\Controllers\WarehouseController'
+		);
 
 	}
 }

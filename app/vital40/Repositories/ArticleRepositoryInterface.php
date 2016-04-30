@@ -12,6 +12,13 @@ interface ArticleRepositoryInterface {
 
     public function paginate($filter);
 
+	/**
+	 * Get the Articles of this UPC ID
+	 * @param $upcID
+	 * @return mixed
+	 */
+	public function getUPCArticles($upcID, $limit=10);
+
     public function getPODArticles($filter, $limit=10);
 
     /**

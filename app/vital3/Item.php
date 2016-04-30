@@ -146,6 +146,15 @@ class Item extends Eloquent {
         $this->additional['parents'] = $value;
     }
 
+	public function isSplit() {             // used at Article level
+		if(isset($this->additional['split']) and $this->additional['split'] == "N" ) return false;
+		return true;
+	}
+	public function isComingled() {         // used at Article level
+		if(isset($this->additional['split']) and $this->additional['split'] == "N" ) return true;
+		return false;
+	}
+
 	/*
 	 * Query Scope, when query building, this type of method is used to build the common parts
 	 * Function name format is

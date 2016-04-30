@@ -10,13 +10,43 @@ class DBArticleRepository implements ArticleRepositoryInterface {
 
 	/**
 	 * Basic select to retrieve Article data.
+     * desc Item;
+    +--------------------+--------------+------+-----+---------+-------+
+    | Field              | Type         | Null | Key | Default | Extra |
+    +--------------------+--------------+------+-----+---------+-------+
+    | objectID           | bigint(20)   | NO   | PRI | NULL    |       |
+    | Sku_Number         | varchar(85)  | YES  |     | NULL    |       |
+    | Client_Code        | varchar(85)  | YES  | MUL | NULL    |       |
+    | Client_SKU         | varchar(85)  | YES  | MUL | NULL    |       |
+    | Description        | varchar(255) | YES  |     | NULL    |       |
+    | UOM                | varchar(85)  | YES  |     | NULL    |       |
+    | Per_Unit_Weight    | varchar(85)  | YES  |     | NULL    |       |
+    | Retail_Price       | varchar(85)  | YES  |     | NULL    |       |
+    | Case_Pack          | varchar(85)  | YES  |     | NULL    |       |
+    | UPC                | varchar(85)  | YES  | MUL | NULL    |       |
+    | Colour             | varchar(85)  | YES  |     | NULL    |       |
+    | Zone               | varchar(85)  | YES  |     | NULL    |       |
+    | Delivery_Number    | varchar(85)  | YES  | MUL | NULL    |       |
+    | PO_Number          | varchar(85)  | YES  | MUL | NULL    |       |
+    | Description_2      | varchar(255) | YES  |     | NULL    |       |
+    | Vendor_Item_Number | varchar(85)  | YES  |     | NULL    |       |
+    | Cases_Ordered      | varchar(85)  | YES  |     | NULL    |       |
+    | Master_Pack_Cube   | varchar(85)  | YES  |     | NULL    |       |
+    | Master_Pack_Weight | varchar(85)  | YES  |     | NULL    |       |
+    | Total_Weight       | varchar(85)  | YES  |     | NULL    |       |
+    | Total_Cube         | varchar(85)  | YES  |     | NULL    |       |
+    +--------------------+--------------+------+-----+---------+-------+
+    21 rows in set (0.00 sec)
 	 * @return mixed
 	 */
 	private function articleSelect() {
         // using the Eloquent model
-		return Item::query()
-			->select('Item.*')
-			->join('itemKit', 'itemKit.parentID', '=', 'Item.objectID')
+		return Item::from( 'Item as Article' )
+			->select('Article.objectID', 'Article.Sku_Number', 'Article.Client_Code', 'Article.Client_SKU', 'Article.Description', 'Article.UOM'
+                   , 'Article.Per_Unit_Weight', 'Article.Retail_Price', 'Article.Case_Pack', 'Article.UPC', 'Article.Colour', 'Article.Zone'
+                   , 'Article.Delivery_Number', 'Article.PO_Number', 'Article.Description_2', 'Article.Vendor_Item_Number', 'Article.Cases_Ordered'
+                   , 'Article.Master_Pack_Cube', 'Article.Master_Pack_Weight', 'Article.Total_Weight', 'Article.Total_Cube')
+			->join('itemKit', 'itemKit.parentID', '=', 'Article.objectID')
 			->distinct();
 	}
 
@@ -39,7 +69,7 @@ class DBArticleRepository implements ArticleRepositoryInterface {
 	public function find($id) {
 		// using the Eloquent model
 		$article = $this->articleSelect()
-			->where('Item.objectID', '=', $id)
+			->where('Article.objectID', '=', $id)
 			->first();
 
         $this->findAdditional($article);
@@ -63,8 +93,8 @@ class DBArticleRepository implements ArticleRepositoryInterface {
             $items = array($container);
         }
         //dd(__METHOD__."(".__LINE__.")",compact('container','items'));
-        Log::debug(__METHOD__."(".__LINE__."):  container class: ".get_class($container));
-        Log::debug(__METHOD__."(".__LINE__."):  items class: ".(is_array($items) ? "array(".count($items).")" : get_class($items)));
+        //Log::debug('container class: '.get_class($container));
+        //Log::debug('items class: '.(is_array($items) ? "array(".count($items).")" : get_class($items)));
 
         foreach($items as $article) {
             if(isset($article)) {  // could be null if find($id) did not find an article
@@ -87,40 +117,41 @@ class DBArticleRepository implements ArticleRepositoryInterface {
     }
 
 	protected function rawFilter($filter) {
+        //Log::debug('query: ',$filter);
 		// Build a query based on filter $input
 		$query = DBArticleRepository::articleSelect();
         if(isset($filter['objectID']) && strlen($filter['objectID']) > 3) {
-            $query->where('Item.objectID', '=', $filter['objectID']);
+            $query->where('Article.objectID', '=', $filter['objectID']);
         }
 		if(isset($filter['Sku_Number']) && strlen($filter['Sku_Number']) > 3) {
-			$query->where('Item.Sku_Number', 'like', trim($filter['Sku_Number']) . '%');
+			$query->where('Article.Sku_Number', 'like', trim($filter['Sku_Number']) . '%');
 		}
 		if(isset($filter['Client_Code']) && strlen($filter['Client_Code']) > 3) {
-			$query->where('Item.Client_Code', $filter['Client_Code']);
+			$query->where('Article.Client_Code', $filter['Client_Code']);
 		}
 		if(isset($filter['Client_SKU']) && strlen($filter['Client_SKU']) > 3) {
-			$query->where('Item.Client_SKU', 'like', $filter['Client_SKU'] . '%');
+			$query->where('Article.Client_SKU', 'like', $filter['Client_SKU'] . '%');
 		}
 		if(isset($filter['Description']) && strlen($filter['Description']) > 3) {
-			$query->where('Item.Description', 'like', $filter['Description'] . '%');
+			$query->where('Article.Description', 'like', $filter['Description'] . '%');
 		}
 		if(isset($filter['UPC']) && strlen($filter['UPC']) > 3) {
-			$query->where('Item.UPC', 'like', ltrim($filter['UPC'],'0') . '%');
+			$query->where('Article.UPC', 'like', ltrim($filter['UPC'],'0') . '%');
 		}
 		if(isset($filter['UOM']) && strlen($filter['UOM']) > 3) {
-			$query->where('Item.UOM', '=', $filter['UOM']);
+			$query->where('Article.UOM', '=', $filter['UOM']);
 		}
 		if(isset($filter['Colour']) && strlen($filter['Colour']) > 1) {
-			$query->where('Item.Colour', 'like', $filter['Colour'] . '%');
+			$query->where('Article.Colour', 'like', $filter['Colour'] . '%');
 		}
 		if(isset($filter['Zone']) && strlen($filter['Zone']) > 3) {
-			$query->where('Item.Zone', 'like', $filter['Zone'] . '%');
+			$query->where('Article.Zone', 'like', $filter['Zone'] . '%');
 		}
         return $query;
     }
 
     /**
-     * Implement filterOn()
+     * Implement filterOn($filter, $limit)
      */
     public function filterOn($filter, $limit=10) {
         if($limit == 0) {
@@ -132,13 +163,31 @@ class DBArticleRepository implements ArticleRepositoryInterface {
 	}
 
     /**
-     * Implement paginate($input)
+     * Implement paginate($filter)
      */
     public function paginate($filter) {
         $results = $this->rawFilter($filter)->paginate(10);
         $this->findAdditional($results);
         //dd(__METHOD__.'('.__LINE__.')',compact('filter', 'results'));
         return $results;
+    }
+
+    /**
+     * Get the Articles of this UPC ID
+     * @param $upcID
+     * @return mixed
+     */
+    public function getUPCArticles($upcID, $limit=10) {
+        $query = $this->articleSelect()
+            ->join('Item as UPC', 'UPC.objectID', '=', 'itemKit.objectID')
+            ->where('itemKit.objectID', '=', $upcID)
+            ->orWhere('UPC.Client_SKU', '=', $upcID);
+        if($limit == 0) {
+            return $this->findAdditional($query->get());
+        } elseif($limit == 1) {
+            return $this->findAdditional($query->first());
+        }
+        return $this->findAdditional($query->limit($limit)->get());
     }
 
     /**
@@ -177,6 +226,7 @@ class DBArticleRepository implements ArticleRepositoryInterface {
 		ItemKit::create(['parentID' => $article->objectID, 'objectID' => '0', 'Quantity' => '0']);
 
         // update here to add the _additional attributes
+        Log::info('Create Article', $input);
         $updatedArticle = $this->update($article->objectID, $input);
 
 		//dd(__METHOD__.'('.__LINE__.')',compact('input','article','updatedArticle'));
@@ -189,6 +239,7 @@ class DBArticleRepository implements ArticleRepositoryInterface {
 	public function update($id, $input) {
 		$item = $this->find($id);
 
+        Log::info("Update Article $id", $input);
 		$updatedArticle = $item->update($input);
 
         foreach($item->additional as $name => $value) {
@@ -217,6 +268,7 @@ class DBArticleRepository implements ArticleRepositoryInterface {
 
         if(isset($item)) {
             //dd(__METHOD__.'('.__LINE__.')',compact('id','item'));
+            Log::info("Delete Article $id");
             ItemAdditional::destroy($item->objectID);
             $deleted = $item->delete();
         }

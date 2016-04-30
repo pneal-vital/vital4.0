@@ -29,10 +29,28 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
 		return $this->addTypes(Inventory::findOrFail($id));
 	}
 
+    /**
+     * desc Inventory;
+    +------------+-------------+------+-----+---------+-------+
+    | Field      | Type        | Null | Key | Default | Extra |
+    +------------+-------------+------+-----+---------+-------+
+    | objectID   | bigint(20)  | NO   | PRI | NULL    |       |
+    | Item       | varchar(85) | YES  | MUL | NULL    |       |
+    | Quantity   | varchar(85) | YES  |     | NULL    |       |
+    | Created    | varchar(85) | YES  |     | NULL    |       |
+    | Status     | varchar(85) | YES  | MUL | NULL    |       |
+    | Order_Line | varchar(85) | YES  | MUL | NULL    |       |
+    | UOM        | varchar(85) | YES  |     |         |       |
+    +------------+-------------+------+-----+---------+-------+
+    7 rows in set (0.01 sec)
+     * @param $filter
+     * @return mixed
+     */
 	protected function rawFilter($filter) {
+        //Log::debug('query: ',$filter);
 		// Build a query based on filter $filter
 		$query = Inventory::query()
-            ->select('Inventory.*')
+            ->select('Inventory.objectID', 'Inventory.Item', 'Inventory.Quantity', 'Inventory.Created', 'Inventory.Status', 'Inventory.Order_Line', 'Inventory.UOM')
             ->orderBy('Created', 'desc');
 		if(isset($filter['objectID']) && strlen($filter['objectID']) > 3) {
 			$query->where('Inventory.objectID', 'like', $filter['objectID'] . '%');
@@ -54,8 +72,14 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
         if(isset($input['UOM']) && strlen($input['UOM']) > 3) {
             $query->where('Inventory.UOM', '=', $input['UOM']);
         }
+        /*
+         * container.parent should generate this sql request
+         * select Inventory.* from Inventory join container inv on inv.objectID = Inventory.objectID where inv.parentID = 6208220881;
+         */
         if(isset($filter['container.parent']) && strlen($filter['container.parent']) > 3) {
-            $query->whereRaw('Inventory.objectID in (select objectID from container where parentID = '.$filter['container.parent'].')');
+            $query
+                ->join('container as inv', 'inv.objectID', '=', 'Inventory.objectID')
+                ->where('inv.parentID',$filter['container.parent']);
         }
         //TODO remove this if statement, check usage first
         if(isset($filter['Location.parent']) && strlen($filter['Location.parent']) > 3) {
@@ -67,7 +91,7 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
                 ->join('container as plt', 'plt.objectID', '=', 'gc.parentID')
                 ->where('plt.parentID', $filter['locationID']);
         }
-        //dd(__METHOD__."(".__LINE__.")",compact('filter','query'));
+        //dd(__METHOD__.'('.__LINE__.')',compact('filter','query'));
         return $query;
     }
 
@@ -77,8 +101,9 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
     public function filterOn($filter, $limit=10) {
 
         if(isset($filter['THOU.container.parent'])) {
-            return DB::connection('vitaldev')
-                ->table('Inventory')
+            //TODO remove this, use the improved $filter['container.child']
+            return DB::connection(Inventory::CONNECTION_NAME)
+                ->table(Inventory::TABLE_NAME)
                 ->join('container as inv', 'inv.objectID', '=', 'Inventory.objectID')
                 ->join('Generic_Container', 'Generic_Container.objectID', '=', 'inv.parentID')
                 ->select('Inventory.*')
@@ -87,8 +112,8 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
                 ->get();
         }
         if(isset($filter['THOU.articleID'])) {
-            return DB::connection('vitaldev')
-                ->table('Inventory')
+            return DB::connection(Inventory::CONNECTION_NAME)
+                ->table(Inventory::TABLE_NAME)
                 ->join('itemKit','itemKit.objectID', '=', 'Inventory.Item')
                 ->select('Inventory.*')
                 ->where('itemKit.parentID', $filter['THOU.articleID'])
@@ -99,29 +124,29 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
         if($limit == 0) {
             return $this->addTypes($this->rawFilter($filter)->get());
         } elseif($limit == 1) {
-            Log::debug(__METHOD__."(".__LINE__."):  filter: ".(is_array($filter) ? 'is_array' : 'not array'));
+            Log::debug('filter: '.(is_array($filter) ? 'is_array' : 'not array'));
             Log::debug($filter);
             // ->first() decided not to work, when result should be null, it returns $this;
             // so we can get the first this way.
             $inventories = $this->rawFilter($filter)->limit(1)->get();
-            Log::debug(__METHOD__."(".__LINE__."):  rawFilter(..)->limit(1)->get(): ".get_class($inventories));
+            Log::debug('rawFilter(..)->limit(1)->get(): '.get_class($inventories));
             Log::debug($inventories);
             if(!$inventories->isEmpty()) {
                 $inventory = $this->addTypes($inventories->first());
-                Log::debug(__METHOD__."(".__LINE__."):  Eloquent\\Collection->first(): ".get_class($inventory));
+                Log::debug('Eloquent\\Collection->first(): '.get_class($inventory));
                 Log::debug($inventory);
                 return $inventory;
             } else {
                 return null;
             }
             //$inv = $this->rawFilter($filter)->limit(1)->get();
-            //Log::debug(__METHOD__."(".__LINE__."):  retrieved: ".get_class($inv));
+            //Log::debug('retrieved: ".get_class($inv));
             //Log::debug($inv);
             //return $this->addTypes($this->rawFilter($filter)->first());
         }
-        Log::debug(__METHOD__."(".__LINE__."):  filterOn: ",$filter);
+        Log::debug('filterOn: ',$filter);
         $results = $this->rawFilter($filter)->limit($limit)->get();
-        Log::debug(__METHOD__."(".__LINE__."):  results: ".(isset($results) ? count($results) : "null"));
+        Log::debug('results: '.(isset($results) ? count($results) : "null"));
 
         return $this->addTypes($results);
     }
@@ -130,27 +155,27 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
      * Implement filterOn($filter)
      */
     public function paginate($filter) {
-		return $this->addTypes($this->rawFilter($filter)->paginate(10));
-	}
+        return $this->addTypes($this->rawFilter($filter)->paginate(10));
+    }
 
     private function addTypes($invContainer) {
         /*
          * First we access a Collection[Inventory] from whatever container we received
          */
-        //dd(__METHOD__."(".__LINE__.")",compact('inventories'));
+        //dd(__METHOD__.'('.__LINE__.')',compact('inventories'));
         // if $invs is a paginator
         $inventories = $invContainer;
         if(is_a($invContainer, 'Illuminate\Pagination\LengthAwarePaginator')) {
             $inventories = $invContainer->items();
-            //dd(__METHOD__."(".__LINE__.")",compact('inventories','convertBack'));
+            //dd(__METHOD__.'('.__LINE__.')',compact('inventories','convertBack'));
         }
         // if $inventories is not, make it an array
         elseif(!is_array($invContainer) && !is_a($invContainer, 'Illuminate\Support\Collection')) {
             $inventories = array($invContainer);
         }
-        //dd(__METHOD__."(".__LINE__.")",compact('invContainer','inventories'));
-        Log::debug(__METHOD__."(".__LINE__."):  invContainer class: ".get_class($invContainer));
-        Log::debug(__METHOD__."(".__LINE__."):  inventories class: ".(is_array($inventories) ? "array(".count($inventories).")" : get_class($inventories)));
+        //dd(__METHOD__.'('.__LINE__.')',compact('invContainer','inventories'));
+        //Log::debug('invContainer class: '.get_class($invContainer));
+        //Log::debug('inventories class: '.(is_array($inventories) ? "array(".count($inventories).')' : get_class($inventories)));
 
         /*
          * update the Inventory record(s) within our Collection[Inventory]
@@ -159,20 +184,20 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
         $itemIDs = array();
         $detailIDs = array();
         foreach($inventories as $inventory) {
-            //Log::debug(__METHOD__."(".__LINE__."):  ".(is_array($inventories) ? "array(".count($inventories).")" : get_class($inventories))." as ".get_class($inventory));
+            //Log::debug((is_array($inventories) ? "array(".count($inventories).')' : get_class($inventories))." as ".get_class($inventory));
             //Log::debug($inventory);
             $itemIDs[$inventory->Item] = $inventory;
             $detailIDs[$inventory->Order_Line] = $inventory;
         }
-        //dd(compact('inventories', 'itemIDs', 'detailIDs'));
+        //dd(__METHOD__.'('.__LINE__.')',compact('inventories', 'itemIDs', 'detailIDs'));
 
         // determine the type of Item each refers to
         if(count($itemIDs) > 0) {
             // Are they UPCs?
-            $upcs = DB::connection('vitaldev')
+            $upcs = DB::connection(Inventory::CONNECTION_NAME)
                 ->table('Item')
                 ->join('itemKit', 'itemKit.objectID', '=', 'Item.objectID')
-                ->select('itemKit.objectID', 'Item.Client_SKU')
+                ->select('itemKit.objectID', 'Item.Client_SKU', 'Item.Description')
                 ->whereIn('itemKit.objectID', array_keys($itemIDs))
                 ->get();
             foreach ($upcs as $upc) {
@@ -180,15 +205,16 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
                     if ($inventory->Item == $upc->objectID) {
                         $inventory->Item_type = Config::get('constants.itemKit.objectID.pointsTo');
                         $inventory->Item_typeID = $upc->Client_SKU;
+                        $inventory->Item_description = $upc->Description;
                     }
                 }
             }
 
             // Are they Articles?
-            $articles = DB::connection('vitaldev')
+            $articles = DB::connection(Inventory::CONNECTION_NAME)
                 ->table('Item')
                 ->join('itemKit', 'itemKit.parentID', '=', 'Item.objectID')
-                ->select('itemKit.parentID', 'Item.Client_SKU')
+                ->select('itemKit.parentID', 'Item.Client_SKU', 'Item.Description')
                 ->whereIn('itemKit.parentID', array_keys($itemIDs))
                 ->get();
             foreach ($articles as $article) {
@@ -196,16 +222,17 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
                     if ($inventory->Item == $article->objectID) {
                         $inventory->Item_type = Config::get('constants.itemKit.parentID.pointsTo');
                         $inventory->Item_typeID = $article->Client_SKU;
+                        $inventory->Item_description = $article->Description;
                     }
                 }
             }
-            //dd(compact('inventories', 'upcs', 'articles'));
+            //dd(__METHOD__.'('.__LINE__.')',compact('inventories', 'upcs', 'articles'));
         }
 
         // determine the type of Order_Detail each refers to
         if(count($detailIDs) > 0) {
             // Are they Purchase Order Details?
-            $purchaseOrderDetails = DB::connection('vitaldev')
+            $purchaseOrderDetails = DB::connection(Inventory::CONNECTION_NAME)
                 ->table('Inbound_Order_Detail')
                 ->join('Inbound_Order', 'Inbound_Order.objectID', '=', 'Inbound_Order_Detail.Order_Number')
                 ->select('Inbound_Order_Detail.objectID', 'Inbound_Order.Purchase_Order')
@@ -221,21 +248,21 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
             }
 
             // Are they Outbound Order Details?
-            $outboundOrderDetails = DB::connection('vitaldev')
+            $outboundOrderDetails = DB::connection(Inventory::CONNECTION_NAME)
                 ->table('Outbound_Order_Detail')
                 ->join('Outbound_Order', 'Outbound_Order.objectID', '=', 'Outbound_Order_Detail.Order_Number')
-                ->select('Outbound_Order_Detail.objectID', 'Outbound_Order.Order_Number')
+                ->select('Outbound_Order_Detail.objectID', 'Outbound_Order.Client_Order_Number')
                 ->whereIn('Outbound_Order_Detail.objectID', array_keys($detailIDs))
                 ->get();
             foreach ($outboundOrderDetails as $outboundOrderDetail) {
                 foreach ($inventories as $inventory) {
                     if ($inventory->Order_Line == $outboundOrderDetail->objectID) {
                         $inventory->Order_Line_type = Config::get('constants.inventory.orderLine.pointsTo.outbound');
-                        $inventory->Order_Line_typeID = $outboundOrderDetail->Order_Number;
+                        $inventory->Order_Line_typeID = $outboundOrderDetail->Client_Order_Number;
                     }
                 }
             }
-            //dd(compact('inventories', 'purchaseOrderDetails', 'outboundOrderDetails'));
+            //dd(__METHOD__.'('.__LINE__.')',compact('inventories', 'purchaseOrderDetails', 'outboundOrderDetails'));
         }
 
         /*
@@ -249,7 +276,7 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
      */
     public function quantityOn($filter) {
         $quantity = 0;
-        //dd($filter);
+        //dd(__METHOD__.'('.__LINE__.')',compact('filter'));
         $inventories = $this->rawFilter($filter)->get();
         foreach($inventories as $inventory) {
             $quantity += $inventory->Quantity;
@@ -270,6 +297,7 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
 	 * Implement create($input)
 	 */
 	public function create($input) {
+        Log::info('Create Inventory', $input);
 		return Inventory::create($input);
 	}
 
@@ -278,10 +306,30 @@ class DBInventoryRepository implements InventoryRepositoryInterface {
      */
     public function update($id, $input) {
         $inventory = Inventory::find($id);
-        Log::debug(__METHOD__."(".__LINE__."):  invID: $id, input: ");
-        Log::debug($input);
 
+        //dd(__METHOD__.'('.__LINE__.')',compact('id','input','inventory'));
+        Log::info("Update Inventory $id", $input);
         return $inventory->update($input);
+    }
+
+    /**
+     * Implement delete($id)
+     */
+    public function delete($id) {
+        $deleted = true;
+        $inventory = $this->find($id);
+
+        if(isset($inventory)) {
+            //dd(__METHOD__.'('.__LINE__.')',compact('id','inventory'));
+            Log::info("Delete Inventory $id");
+            $deleted = $inventory->delete();
+
+            // delete the container object also
+            DB::connection(Inventory::CONNECTION_NAME)
+                ->statement('delete from container where objectID = '.$id);
+        }
+
+        return $deleted;
     }
 
     public function onHandReport($UPCs) {
@@ -313,7 +361,7 @@ select case Item_Additional.Value when 'Y' then 'Split' else 'Comingled' end as 
  group by UPClctn.Location_Name, UPCinven.Status
  order by sum(UPCinven.Quantity) desc, UPClctn.Location_Name, UPCinven.Status;
              */
-            Log::debug(__METHOD__."(".__LINE__."):  count(UPCs): ".count($UPCs));
+            Log::debug('count(UPCs): '.count($UPCs));
 /*
         // display current on hand quantities
         $onHandInventories = DB::connection("vitaldev")
@@ -381,12 +429,12 @@ select STRAIGHT_JOIN UPC.objectID, UPC.Client_SKU, UPC.Description
  group by Client_SKU, Status, LocType
  order by Client_SKU, Status, LocType;
            ";
-            Log::debug(__METHOD__."(".__LINE__."):  upcIDs: ".$upcIDs);
+            Log::debug('upcIDs: '.$upcIDs);
             $onHandInventories = DB::connection("vitaldev")->select($rawSelect, []);
         }
 
-        Log::debug(__METHOD__."(".__LINE__."):  ".count($onHandInventories));
-        //dd(__METHOD__."(".__LINE__.")",compact('UPCs', 'upcIDs', 'params', 'onHandInventories'));
+        Log::debug(count($onHandInventories));
+        //dd(__METHOD__.'('.__LINE__.')',compact('UPCs', 'upcIDs', 'params', 'onHandInventories'));
 
         return $onHandInventories;
     }
@@ -395,7 +443,7 @@ select STRAIGHT_JOIN UPC.objectID, UPC.Client_SKU, UPC.Description
      * Count of active UPC definitions
      */
     public function countUPCs() {
-        $results = DB::connection('vitaldev')->select("
+        $results = DB::connection(Inventory::CONNECTION_NAME)->select("
 select count(distinct UPC.objectID) as UPCs from Item UPC
   join itemKit on itemKit.objectID = UPC.objectID
   join Inventory on Inventory.Item = UPC.objectID and Inventory.Status != 'SHIPPED' and Inventory.Quantity > 0

@@ -87,9 +87,13 @@ Route::patch('inboundOrderDetail', ['as' => 'inboundOrderDetail.filter', 'uses' 
 
 Route::resource('inventory', 'InventoryController');
 Route::patch('inventory', ['as' => 'inventory.filter', 'uses' => 'InventoryController@filter']);
+Route::get('inventory/{id}/move', ['as' => 'inventory.move', 'uses' => 'InventoryController@move']);
+Route::get('inventory/{invID}/locate/{id}', ['as' => 'inventory.locate', 'uses' => 'InventoryController@locate']);
 Entrust::routeNeedsRole('inventory*', ['teamLead','super','manager','support'], Redirect::to('home'), false);
-Entrust::routeNeedsRole('inventory/create', 'support', Redirect::to('home'));
-Entrust::routeNeedsRole('inventory/*/edit', 'support', Redirect::to('home'));
+Entrust::routeNeedsRole('inventory/create', 'manager', Redirect::to('home'));
+Entrust::routeNeedsRole('inventory/*/edit', 'manager', Redirect::to('home'));
+Entrust::routeNeedsRole('inventory/*/move', 'manager', Redirect::to('home'));
+Entrust::routeNeedsRole('inventory/*/locate/*', 'manager', Redirect::to('home'));
 
 Route::get('invSummary', ['as' => 'invSummary.index', 'uses' => 'InventorySummaryController@index']);
 Route::patch('invSummary', ['as' => 'invSummary.filter', 'uses' => 'InventorySummaryController@filter']);
@@ -106,9 +110,13 @@ Entrust::routeNeedsRole('location/*/edit', 'manager', Redirect::to('home'));
 
 Route::resource('pallet', 'PalletController');
 Route::patch('pallet', ['as' => 'pallet.filter', 'uses' => 'PalletController@filter']);
+Route::get('pallet/{id}/move', ['as' => 'pallet.move', 'uses' => 'PalletController@move']);
+Route::get('pallet/{pltID}/locate/{id}', ['as' => 'pallet.locate', 'uses' => 'PalletController@locate']);
 Entrust::routeNeedsRole('pallet*', ['teamLead','super','manager','support'], Redirect::to('home'), false);
 Entrust::routeNeedsRole('pallet/create', 'manager', Redirect::to('home'));
 Entrust::routeNeedsRole('pallet/*/edit', 'manager', Redirect::to('home'));
+Entrust::routeNeedsRole('pallet/*/move', 'manager', Redirect::to('home'));
+Entrust::routeNeedsRole('pallet/*/locate/*', 'manager', Redirect::to('home'));
 
 Route::resource('performanceTally', 'PerformanceTallyController');
 Route::patch('performanceTally', ['as' => 'performanceTally.filter', 'uses' => 'PerformanceTallyController@filter']);
@@ -164,9 +172,13 @@ Entrust::routeNeedsRole('rolePermissions/*/edit', ['support','admin','150'], Red
 
 Route::resource('tote', 'ToteController');
 Route::patch('tote', ['as' => 'tote.filter', 'uses' => 'ToteController@filter']);
+Route::get('tote/{id}/move', ['as' => 'tote.move', 'uses' => 'ToteController@move']);
+Route::get('tote/{gcID}/locate/{id}', ['as' => 'tote.locate', 'uses' => 'ToteController@locate']);
 Entrust::routeNeedsRole('tote*', ['teamLead','super','manager','support'], Redirect::to('home'), false);
 Entrust::routeNeedsRole('tote/create', 'manager', Redirect::to('home'));
 Entrust::routeNeedsRole('tote/*/edit', 'manager', Redirect::to('home'));
+Entrust::routeNeedsRole('tote/*/move', 'manager', Redirect::to('home'));
+Entrust::routeNeedsRole('tote/*/locate/*', 'manager', Redirect::to('home'));
 
 Route::resource('upc', 'vital40\UPCController');
 Route::patch('upc', ['as' => 'upc.filter', 'uses' => 'vital40\UPCController@filter']);
@@ -195,6 +207,8 @@ Route::patch('userRoles', ['as' => 'userRoles.filter', 'uses' => 'UserRolesContr
 Entrust::routeNeedsRole('userRoles*', ['support','admin','182'], Redirect::to('home'), false);
 Entrust::routeNeedsRole('userRoles/create', ['support','admin','183'], Redirect::to('home'), false);
 Entrust::routeNeedsRole('userRoles/*/edit', ['support','admin','184'], Redirect::to('home'), false);
+
+Route::get('warehouse/{id}', ['as' => 'warehouse.show', 'uses' => 'WarehouseController@show']);
 
 //   Business UI
 // Quick Receive

@@ -6,10 +6,13 @@ use \Log;
 
 class Inventory extends Eloquent {
 
+    const CONNECTION_NAME = 'vitaldev';
+    const TABLE_NAME      = 'Inventory';
+
 	/** Database connection to use */
-	protected $connection = 'vitaldev';
+	protected $connection = self::CONNECTION_NAME;
 	/** Table to use */
-	protected $table = 'Inventory';
+	protected $table = self::TABLE_NAME;
 	/** primaryKey is objectID */
 	protected $primaryKey = 'objectID';
 	/** Allow DB to increment objectID */
@@ -51,10 +54,18 @@ class Inventory extends Eloquent {
 	protected $guarded = ['objectID', 'Created'];
 
     /**
-     * Array to hold _Additional data items
+     * protected fields vs Field Mutators to manage _Additional information about this object
+     * see: http://stackoverflow.com/questions/24637553/laravel-eloquent-orm-save-returns-column-not-found-mysql-error
      */
+    public $Item_type;
+    public $Item_typeID;
+    public $Item_description;
+    public $Order_Line_type;
+    public $Order_Line_typeID;
+    /**
+     * Array to hold _Additional data items
     public $additional = [];
-
+     */
 
 	/**
 	 * This function can set objectID, set default values, and validate the entered field values.
@@ -66,20 +77,33 @@ class Inventory extends Eloquent {
 		// set objectID
         $inserted = VitalObject::create(['classID' => 'Inventory']);
         $this->objectID = $inserted->objectID;
-        Log::debug(__METHOD__."(".__LINE__."):  objectID: ".$this->objectID);
+        Log::debug('objectID: '.$this->objectID);
 
         // set default values
         $this->Status = "RECD";
-        Log::debug(__METHOD__."(".__LINE__."):    Status: ".$this->Status);
+        //Log::debug('Status: '.$this->Status);
         $now = Carbon::now();
-        Log::debug(__METHOD__."(".__LINE__."):  now: ".$now);
+        //Log::debug('now: '.$now);
         $this->Created = $now;
-        Log::debug(__METHOD__."(".__LINE__."):   Created: ".$this->Created);
+        //Log::debug('Created: '.$this->Created);
 
 		/* validate the entered field values.
 		if ( ! $this->isValid()) return false;
 		*/
 	}
+
+    /**
+     * This function is invoked before saving, (includes, create and update)
+     * See; EventServiceProvider::boot(..) ..::saving(..)
+     */
+    public function isSaving() {
+        $this->Item       = trim($this->Item       );
+        $this->Quantity   = trim($this->Quantity   );
+        $this->Created    = trim($this->Created    );
+        $this->Status     = trim($this->Status     );
+        $this->Order_Line = trim($this->Order_Line );
+        $this->UOM        = trim($this->UOM        );
+    }
 
 
     /**
@@ -115,8 +139,8 @@ class Inventory extends Eloquent {
 
     /**
      * Using Field Mutators to manage _Additional information about this object
-     */
     public function getItemTypeAttribute() {
+        if(isset($this->additional['Item_type']) == false) return null;
         return $this->additional['Item_type'];
     }
     public function setItemTypeAttribute($value) {
@@ -127,6 +151,12 @@ class Inventory extends Eloquent {
     }
     public function setItemTypeIDAttribute($value) {
         $this->additional['Item_typeID'] = $value;
+    }
+    public function getItemDescriptionAttribute() {
+        return $this->additional['Item_description'];
+    }
+    public function setItemDescriptionAttribute($value) {
+        $this->additional['Item_description'] = $value;
     }
     public function getOrderLineTypeAttribute() {
         if(isset($this->additional['Order_Line_type']) == false) return null;
@@ -141,6 +171,7 @@ class Inventory extends Eloquent {
     public function setOrderLineTypeIDAttribute($value) {
         $this->additional['Order_Line_typeID'] = $value;
     }
+     */
 
 	/*
 	 * Query Scope, when query building, this type of method is used to build the common parts

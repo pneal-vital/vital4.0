@@ -7,7 +7,8 @@
         Form::label($fieldName, Lang::get('labels.'.$fieldName), ['class' => (isset($labelSize) ? $labelSize : 'col-md-4').' control-label']) --}}
     <label for="{{ $fieldName }}" class="{{ (isset($labelSize) ? $labelSize : 'col-md-4').' control-label' }}">{!! Lang::get('labels.'.$fieldName) !!}</label>
     <div class="{{ isset($fieldSize) ? $fieldSize : 'col-md-8' }}">
-        {!! Form::text($fieldName, null, ['class' => 'form-control', 'placeholder' => Lang::get('labels.'.(isset($labelType) ? $labelType : 'enter').'.'.$fieldName) ]) !!}
+        <!-- protected? {{ is_array($protected = (isset($readonly) ? ['readonly' => 'readonly'] : [])) }} -->
+        {!! Form::text($fieldName, null, ['class' => 'form-control', 'placeholder' => Lang::get('labels.'.(isset($labelType) ? $labelType : 'enter').'.'.$fieldName)]+$protected) !!}
         @if($errors->has($fieldName))
             <ul class="alert alert-danger">
                 @foreach($errors->get($fieldName) as $error)

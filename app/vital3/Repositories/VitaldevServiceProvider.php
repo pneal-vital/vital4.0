@@ -56,6 +56,10 @@ class VitaldevServiceProvider extends ServiceProvider {
             'vital3\Repositories\VitalObjectRepositoryInterface',
             'vital3\Repositories\DBVitalObjectRepository'
         );
+		$this->app->bind(
+			'vital3\Repositories\WarehouseRepositoryInterface',
+			'vital3\Repositories\DBWarehouseRepository'
+		);
 
 	}
 }

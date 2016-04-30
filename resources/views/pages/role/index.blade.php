@@ -13,13 +13,11 @@
 
     @lang('labels.titles.Role_Filter')
 
-    <div class="pull-right">
-
     @if(Entrust::can(['role.create']))
-        <a href="{{URL::route('role.create')}}" title="{{ Lang::get('labels.icons.create') }}">{!! Html::image('img/create.png', Lang::get('labels.icons.create'),array('height'=>'20','width'=>'20')) !!}</a>
+        <div class="pull-right">
+            <a href="{{URL::route('role.create')}}" title="{{ Lang::get('labels.icons.create') }}">{!! Html::image('img/create.png', Lang::get('labels.icons.create'),array('height'=>'20','width'=>'20')) !!}</a>
+        </div>
     @endif
-
-    </div>
 
     <!-- stop of pages/role/index.blade.php, section('heading') -->
 @stop

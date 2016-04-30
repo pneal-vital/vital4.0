@@ -21,14 +21,15 @@ class PalletRequest extends Request {
 	 */
 	public function rules()
 	{
+		if($this->exists('btn_Cancel')) return [];
 		return [
 			// Here you can refer to the fields in pallet/create.blade.php & pallet/edit.blade.php
 			// See: laravel.com/docs/validation
-			'Pallet_ID' => 'min:8',
-			'x' => 'required|numeric',
-			'y' => 'required|numeric',
-			'z' => 'required|numeric',
-			'Status' => 'required|In:LOCK,OPEN,LOADED,SHIPPED',
+			'Pallet_ID' => 'min:4',
+			'x' => 'numeric',
+			'y' => 'numeric',
+			'z' => 'numeric',
+			'Status' => 'required|In:LOCK,PUTAWAY,OPEN,LOADED,SHIPPED',
 		];
 	}
 

@@ -11,12 +11,9 @@
     +-----------+-------------+------+-----+---------+-------+
 --}}
 
-@if(Entrust::hasRole(['support']))
-    @include('fields.textEntry', ['fieldName' => 'objectID' ])
-@endif
 @include('fields.textEntry', ['fieldName' => 'Carton_ID' ])
-@include('fields.ddList'   , ['fieldName' => 'Status', 'lists' => $statuses ])
+@include('fields.ddList'   , ['fieldName' => 'Status', 'lists' => (['0' => Lang::get('labels.enter.Status')]+Lang::get('lists.tote.status')) ])
 
-@include('fields.button')
+@include('fields.button', ['CancelButton' => 'Cancel'])
 
 <!-- End of pages/tote/form.blade.php -->

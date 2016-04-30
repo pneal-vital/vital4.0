@@ -68,14 +68,10 @@
                                 <li>{!! link_to_route('inboundOrder.create', Lang::get('labels.navbar.InboundOrder')) !!}</li>
                                 <li>{!! link_to_route('inboundOrderDetail.create', Lang::get('labels.navbar.InboundOrderDetail')) !!}</li>
                             @endif
-                            <li>{!! link_to_route('inventory.create', Lang::get('labels.navbar.Inventory')) !!}</li>
-                            <li>{!! link_to_route('location.create', Lang::get('labels.navbar.Location')) !!}</li>
-                            <li>{!! link_to_route('pallet.create', Lang::get('labels.navbar.Pallet')) !!}</li>
                             <li>{!! link_to_route('performanceTally.create', Lang::get('labels.navbar.PerformanceTally')) !!}</li>
                             @if(Entrust::hasRole(['support']))
                                 <li>{!! link_to_route('receiptHistory.create', Lang::get('labels.navbar.ReceiptHistory')) !!}</li>
                             @endif
-                            <li>{!! link_to_route('tote.create', Lang::get('labels.navbar.Tote')) !!}</li>
                             <li>{!! link_to_route('userActivity.create', Lang::get('labels.navbar.UserActivity')) !!}</li>
                             @if(Entrust::hasRole(['support']))
                                 <li>{!! link_to_route('userConversation.create', Lang::get('labels.navbar.UserConversation')) !!}</li>

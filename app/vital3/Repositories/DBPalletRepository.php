@@ -41,27 +41,57 @@ class DBPalletRepository implements PalletRepositoryInterface {
 		return Pallet::findOrFail($id);
 	}
 
+    /**
+     * desc Pallet;
+    +-----------+-------------+------+-----+---------+-------+
+    | Field     | Type        | Null | Key | Default | Extra |
+    +-----------+-------------+------+-----+---------+-------+
+    | objectID  | bigint(20)  | NO   | PRI | 0       |       |
+    | Pallet_ID | varchar(85) | NO   | MUL |         |       |
+    | x         | varchar(85) | NO   |     |         |       |
+    | y         | varchar(85) | NO   |     |         |       |
+    | z         | varchar(85) | NO   |     |         |       |
+    | Status    | varchar(85) | NO   |     |         |       |
+    +-----------+-------------+------+-----+---------+-------+
+    6 rows in set (0.01 sec)
+     * @param $filter
+     * @return mixed
+     */
 	protected function rawFilter($filter) {
+        //Log::debug('query: ',$filter);
 		// Build a query based on filter $filter
-		$query = Pallet::orderBy('Pallet_ID', 'asc');
-		if(isset($filter['Pallet_ID']) && strlen($filter['Pallet_ID']) > 2) {
-			$query = $query->where('Pallet_ID', 'like', ltrim($filter['Pallet_ID'],'0') . '%');
+		$query = Pallet::query()
+            ->select('Pallet.objectID', 'Pallet.Pallet_ID', 'Pallet.x', 'Pallet.y', 'Pallet.z', 'Pallet.Status')
+            ->orderBy('Pallet_ID', 'asc');
+        if(isset($filter['Pallet_ID']) && strlen($filter['Pallet_ID']) > 2) {
+            $query->where('Pallet_ID', 'like', ltrim($filter['Pallet_ID'],'0') . '%');
 		}
 		if(isset($filter['Pallet_ID.prefix']) && is_array($filter['Pallet_ID.prefix'])) {
-			$query = $query->whereRaw("substring(Pallet_ID,1,3) in ('".implode("','", $filter['Pallet_ID.prefix'])."')");
+            $query->whereRaw("substring(Pallet_ID,1,3) in ('".implode("','", $filter['Pallet_ID.prefix'])."')");
 		}
         if(isset($filter['Status']) && is_array($filter['Status'])) {
-            $query = $query->whereRaw("Status in ('".implode("','", $filter['Status'])."')");
+            $query->whereRaw("Status in ('".implode("','", $filter['Status'])."')");
         }
         elseif(isset($filter['Status']) && strlen($filter['Status']) > 3) {
-            $query = $query->where('Status', '=', $filter['Status']);
+            $query->where('Status', '=', $filter['Status']);
         }
-        //TODO these next filters should add to $query, not replace it, see: ArticleFlow.closeTote(..)
+        /*
+         * container.parent should generate this sql request
+         * select Pallet.* from Pallet join container plt on plt.objectID = Pallet.objectID where plt.parentID = 6213292055;
+         */
         if(isset($filter['container.parent']) && strlen($filter['container.parent']) > 3) {
-            $query = $this->parentSelect($filter['container.parent']);
+            $query
+                ->join('container as plt', 'plt.objectID', '=', 'Pallet.objectID')
+                ->where('plt.parentID',$filter['container.parent']);
         }
+        /*
+         * container.child should generate this sql request
+         * select Pallet.* from Pallet join container gc on gc.parentID = Pallet.objectID where gc.objectID = 6226111054;
+         */
         if(isset($filter['container.child']) && strlen($filter['container.child']) > 3) {
-            $query = $this->childSelect($filter['container.child']);
+            $query
+                ->join('container as gc', 'gc.parentID', '=', 'Pallet.objectID')
+                ->where('gc.objectID',$filter['container.child']);
         }
         return $query;
     }
@@ -82,16 +112,16 @@ class DBPalletRepository implements PalletRepositoryInterface {
      * Implement paginate($filter)
      */
     public function paginate($filter) {
-        return $this->rawFilter($filter)->paginate();
+        return $this->rawFilter($filter)->paginate(10);
 	}
 
     /**
-     * @param $filter - may ask "what pallet is in ths locationID?"
+     * @param $filter - may ask "what pallet is in this locationID?"
      * @return mixed - Pallet
      */
     public function findOrCreate($filter) {
         $pallet = $this->rawFilter($filter)->first();
-        Log::debug(__METHOD__."(".__LINE__."): pallet: ".(isset($pallet) ? $pallet->Pallet_ID : "null"));
+        Log::debug('pallet: '.(isset($pallet) ? $pallet->Pallet_ID : "null"));
         // if we didn't find one, do we want to create one?
         if(!isset($pallet)) {
             // did they ask "what pallet is in this locationID?"
@@ -101,11 +131,8 @@ class DBPalletRepository implements PalletRepositoryInterface {
                 if(!isset($params['y'])) $params['y'] = 100;
                 if(!isset($params['z'])) $params['z'] = 100;
                 if(!isset($params['Status'])) $params['Status'] = Config::get('constants.pallet.status.lock');
-                Log::debug(__METHOD__."(".__LINE__."): create params");
-                Log::debug($params);
+                Log::info('Create Location',$params);
                 $pallet = $this->create($params);
-                Log::debug(__METHOD__."(".__LINE__."): create Pallet");
-                Log::debug($pallet);
                 $this->locationRepository->putPalletIntoLocation($pallet->objectID, $filter['container.parent']);
             }
         }
@@ -113,36 +140,10 @@ class DBPalletRepository implements PalletRepositoryInterface {
     }
 
     /**
-     * Given a parent objectID, build a query to find Pallet data through hierarchy chain.
-     *
-     * @return mixed
-     */
-    private function parentSelect($id) {
-        // Using QueryBuilder joins
-        return DB::connection('vitaldev')
-            ->table('Pallet')
-            ->join('container', 'container.objectID', '=', 'Pallet.objectID')
-            ->where('container.parentID', '=', $id);
-    }
-
-    /**
-     * Given a child objectID, build a query to find Pallet data through hierarchy chain.
-     *
-     * @return mixed
-     */
-    private function childSelect($id) {
-        // Using QueryBuilder joins
-        return DB::connection('vitaldev')
-            ->table('container')
-            ->join('Pallet', 'Pallet.objectID', '=', 'container.parentID')
-            ->select('Pallet.objectID', 'Pallet.Pallet_ID')
-            ->where('container.objectID', '=', $id);
-    }
-
-    /**
 	 * Implement create($input)
 	 */
 	public function create($input) {
+        Log::info('Create Pallet', $input);
 		return Pallet::create($input);
 	}
 
@@ -152,28 +153,59 @@ class DBPalletRepository implements PalletRepositoryInterface {
     public function update($id, $input) {
         $pallet = Pallet::find($id);
 
-        //dd($input);
+        //dd(__METHOD__.'('.__LINE__.')',compact('id','input','pallet'));
+        Log::info("Update Pallet $id", $input);
         return $pallet->update($input);
     }
 
     /**
+     * Implement delete($id)
+     */
+    public function delete($id) {
+        $deleted = true;
+        $pallet = $this->find($id);
+
+        if(isset($pallet)) {
+            //dd(__METHOD__.'('.__LINE__.')',compact('id','pallet'));
+            Log::info("Delete Pallet $id");
+            $deleted = $pallet->delete();
+
+            // delete the container object also
+            DB::connection(Pallet::CONNECTION_NAME)
+                ->statement('delete from container where objectID = '.$id);
+        }
+
+        return $deleted;
+    }
+
+    /**
+     * IMPORTANT: Call this function name on the Controller to verify this action is allowed
      * Implement putToteIntoPallet($toteID, $palletID)
      */
     public function putToteIntoPallet($toteID, $palletID) {
         $tote = GenericContainer::findOrFail($toteID);
         $pallet = Pallet::findOrFail($palletID);
-        $container = DB::connection('vitaldev')
+        $container = DB::connection(Pallet::CONNECTION_NAME)
             ->table('container')
             ->where('objectID', $toteID)->first();
 
+        Log::info("Put Tote $toteID into Pallet $palletID");
         if(isset($container)) {
-            DB::connection('vitaldev')
+            $result = DB::connection(Pallet::CONNECTION_NAME)
                 ->table('container')
                 ->where('containerID', $container->containerID)
                 ->update(['parentID' => $palletID, 'objectID' => $toteID]);
+            // $result === 1/true if the container was updated
+            // $result === 0/false if no containers were updated
+            if($result === 1 or $result === 0) return true;
         } else {
-            Container::create(['parentID' => $palletID, 'objectID' => $toteID]);
+            $result = Container::create(['parentID' => $palletID, 'objectID' => $toteID]);
+            // $result == container object created
+            if(isset($result) and get_class($result) == 'App\vital3\Container') return true;
         }
+        Log::error('putToteIntoPallet failed');
+        //dd(__METHOD__.'('.__LINE__.')',compact('toteID','palletID','tote','pallet','container','result'));
+        return ['putToteIntoPallet failed'];
     }
 
 }

@@ -164,6 +164,7 @@ return [
         'App\Jobs\VitalJobServiceProvider',
         'App\Reports\ReportServiceProvider',
         'App\vital3\Repositories\VitaldevServiceProvider',
+        'App\vital40\Inventory\InventoryServiceProvider',
         'App\vital40\VITaL40ServiceProvider',
 
         /*

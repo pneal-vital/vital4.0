@@ -8,17 +8,46 @@ use \Log;
 
 class DBUPCRepository implements UPCRepositoryInterface {
 
-	/**
-	 * Basic select to retrieve UPC data.
-	 * @return mixed
+    /**
+     * Basic select to retrieve UPC data.
+     * desc Item;
+    +--------------------+--------------+------+-----+---------+-------+
+    | Field              | Type         | Null | Key | Default | Extra |
+    +--------------------+--------------+------+-----+---------+-------+
+    | objectID           | bigint(20)   | NO   | PRI | NULL    |       |
+    | Sku_Number         | varchar(85)  | YES  |     | NULL    |       |
+    | Client_Code        | varchar(85)  | YES  | MUL | NULL    |       |
+    | Client_SKU         | varchar(85)  | YES  | MUL | NULL    |       |
+    | Description        | varchar(255) | YES  |     | NULL    |       |
+    | UOM                | varchar(85)  | YES  |     | NULL    |       |
+    | Per_Unit_Weight    | varchar(85)  | YES  |     | NULL    |       |
+    | Retail_Price       | varchar(85)  | YES  |     | NULL    |       |
+    | Case_Pack          | varchar(85)  | YES  |     | NULL    |       |
+    | UPC                | varchar(85)  | YES  | MUL | NULL    |       |
+    | Colour             | varchar(85)  | YES  |     | NULL    |       |
+    | Zone               | varchar(85)  | YES  |     | NULL    |       |
+    | Delivery_Number    | varchar(85)  | YES  | MUL | NULL    |       |
+    | PO_Number          | varchar(85)  | YES  | MUL | NULL    |       |
+    | Description_2      | varchar(255) | YES  |     | NULL    |       |
+    | Vendor_Item_Number | varchar(85)  | YES  |     | NULL    |       |
+    | Cases_Ordered      | varchar(85)  | YES  |     | NULL    |       |
+    | Master_Pack_Cube   | varchar(85)  | YES  |     | NULL    |       |
+    | Master_Pack_Weight | varchar(85)  | YES  |     | NULL    |       |
+    | Total_Weight       | varchar(85)  | YES  |     | NULL    |       |
+    | Total_Cube         | varchar(85)  | YES  |     | NULL    |       |
+    +--------------------+--------------+------+-----+---------+-------+
+    21 rows in set (0.00 sec)
+     * @return mixed
      */
 	private function upcSelect() {
 		// Using QueryBuilder joins
         return Item::from( 'Item as UPC' )
-            ->select('UPC.*')
+            ->select('UPC.objectID', 'UPC.Sku_Number', 'UPC.Client_Code', 'UPC.Client_SKU', 'UPC.Description', 'UPC.UOM'
+                   , 'UPC.Per_Unit_Weight', 'UPC.Retail_Price', 'UPC.Case_Pack', 'UPC.UPC', 'UPC.Colour', 'UPC.Zone'
+                   , 'UPC.Delivery_Number', 'UPC.PO_Number', 'UPC.Description_2', 'UPC.Vendor_Item_Number', 'UPC.Cases_Ordered'
+                   , 'UPC.Master_Pack_Cube', 'UPC.Master_Pack_Weight', 'UPC.Total_Weight', 'UPC.Total_Cube')
             ->join('itemKit', 'itemKit.objectID', '=', 'UPC.objectID')
             ->distinct();
-        return $query;
 	}
 
 	/**
@@ -69,8 +98,8 @@ class DBUPCRepository implements UPCRepositoryInterface {
             $items = array($container);
         }
         //dd(__METHOD__."(".__LINE__.")",compact('container','items'));
-        Log::debug(__METHOD__."(".__LINE__."):  container class: ".get_class($container));
-        Log::debug(__METHOD__."(".__LINE__."):  items class: ".(is_array($items) ? "array(".count($items).")" : get_class($items)));
+        //Log::debug(__METHOD__."(".__LINE__."):  container class: ".get_class($container));
+        //Log::debug(__METHOD__."(".__LINE__."):  items class: ".(is_array($items) ? "array(".count($items).")" : get_class($items)));
 
         foreach($items as $upc) {
             if(isset($upc)) {  // could be null if find($id) did not find an article
@@ -88,9 +117,9 @@ class DBUPCRepository implements UPCRepositoryInterface {
                     | parentSKU          | varchar(85)  | YES  |     | NULL    |       |
                     | Quantity           | bigint(20)   | YES  |     | NULL    |       |
                  */
-                $articles = Item::from( 'Item as UPC' )
-                    ->join('itemKit', 'itemKit.parentID', '=', 'UPC.objectID')
-                    ->select('UPC.objectID', 'UPC.Client_SKU', 'itemKit.Quantity')
+                $articles = Item::from( 'Item as Article' )
+                    ->join('itemKit', 'itemKit.parentID', '=', 'Article.objectID')
+                    ->select('Article.objectID', 'Article.Client_SKU', 'itemKit.Quantity')
                     ->distinct()
                     ->where('itemKit.objectID', '=', $upc->objectID)
                     ->get();
@@ -112,6 +141,7 @@ class DBUPCRepository implements UPCRepositoryInterface {
 
 
     protected function rawFilter($filter) {
+        //Log::debug('query: ',$filter);
 		// Build a query based on filter $input
 		$query = $this->upcSelect();
 		if(isset($filter['objectID']) && strlen($filter['objectID']) > 3) {
@@ -145,19 +175,19 @@ class DBUPCRepository implements UPCRepositoryInterface {
     }
 
     /**
-     * Implement filterOn($input, $limit)
+     * Implement filterOn($filter, $limit)
      */
-    public function filterOn($input, $limit=10) {
+    public function filterOn($filter, $limit=10) {
         if($limit == 0) {
-            return $this->findAdditional($this->rawFilter($input)->get());
+            return $this->findAdditional($this->rawFilter($filter)->get());
         } elseif($limit == 1) {
-            return $this->findAdditional($this->rawFilter($input)->first());
+            return $this->findAdditional($this->rawFilter($filter)->first());
         }
-		return $this->findAdditional($this->rawFilter($input)->limit($limit)->get());
+		return $this->findAdditional($this->rawFilter($filter)->limit($limit)->get());
 	}
 
     /**
-     * Implement paginate($input)
+     * Implement paginate($filter)
      */
     public function paginate($filter) {
         $results = $this->rawFilter($filter)->paginate(10);

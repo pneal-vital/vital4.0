@@ -37,10 +37,8 @@ class EventServiceProvider extends ServiceProvider
     {
         parent::boot($events);
 
-        GenericContainer::creating(function($genericContainer)
-        {
-            return $genericContainer->isCreating();
-        });
+        GenericContainer::creating(function($genericContainer) { return $genericContainer->isCreating(); });
+        GenericContainer::  saving(function($genericContainer) { return $genericContainer->isSaving();   });
 
         InboundOrder::creating(function($inboundOrder)
         {
@@ -52,10 +50,8 @@ class EventServiceProvider extends ServiceProvider
             return $inboundOrderDetail->isCreating();
         });
 
-        Inventory::creating(function($inventory)
-        {
-            return $inventory->isCreating();
-        });
+        Inventory::creating(function($inventory) { return $inventory->isCreating(); });
+        Inventory::  saving(function($inventory) { return $inventory->isSaving();   });
 
         Item::creating(function($item)
         {
@@ -72,15 +68,11 @@ class EventServiceProvider extends ServiceProvider
             return $jobStatus->isCreating();
         });
 
-        Location::creating(function($location)
-        {
-            return $location->isCreating();
-        });
+        Location::creating(function($location) { return $location->isCreating(); });
+        Location::  saving(function($location) { return $location->isSaving();   });
 
-        Pallet::creating(function($pallet)
-        {
-            return $pallet->isCreating();
-        });
+        Pallet::creating(function($pallet) { return $pallet->isCreating(); });
+        Pallet::  saving(function($pallet) { return $pallet->isSaving();   });
 
         PerformanceTally::creating(function($performanceTally)
         {
